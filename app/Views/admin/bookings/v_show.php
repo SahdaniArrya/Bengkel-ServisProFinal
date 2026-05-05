@@ -1,0 +1,84 @@
+<?= $this->extend('layout') ?>
+<?= $this->section('content') ?>
+
+<?php if (session()->getFlashdata('success')): ?>
+  <div class="alert alert-success alert-dismissible fade show">
+    <?= session()->getFlashdata('success') ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+<?php endif; ?>
+<?php if (session()->getFlashdata('error')): ?>
+  <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
+<?php endif; ?>
+
+<div class="row">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Informasi Booking</h5>
+        <table class="table table-borderless">
+          <tr><th style="width:160px">ID Booking</th><td>#<?= $booking['id'] ?></td></tr>
+          <tr><th>Pelanggan</th><td><?= esc($booking['user_name']) ?> &mdash; <?= esc($booking['user_phone']) ?></td></tr>
+          <tr><th>Layanan</th><td><?= esc($booking['service_name']) ?></td></tr>
+          <tr><th>Harga</th><td>Rp <?= number_format($booking['price'], 0, ',', '.') ?></td></tr>
+          <tr><th>Tanggal</th><td><?= date('l, d M Y', strtotime($booking['available_date'])) ?></td></tr>
+          <tr><th>Slot Waktu</th><td><?= substr($booking['slot_time'], 0, 5) ?> WIB</td></tr>
+          <tr><th>Teknisi</th><td><?= esc($booking['staff_name'] ?? '-') ?></td></tr>
+          <tr><th>Catatan</th><td><?= esc($booking['notes'] ?? '-') ?></td></tr>
+          <tr>
+            <th>Status</th>
+            <td>
+              <?php
+              $badges = ['pending'=>'warning','confirmed'=>'info','in_progress'=>'primary','done'=>'success','cancelled'=>'danger'];
+              $labels = ['pending'=>'Pending','confirmed'=>'Dikonfirmasi','in_progress'=>'Sedang Dikerjakan','done'=>'Selesai','cancelled'=>'Dibatalkan'];
+              ?>
+              <span class="badge bg-<?= $badges[$booking['status']] ?? 'secondary' ?> fs-6">
+                <?= $labels[$booking['status']] ?? $booking['status'] ?>
+              </span>
+            </td>
+          </tr>
+          <tr><th>Dibuat</th><td><?= date('d M Y H:i', strtotime($booking['created_at'])) ?></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <?php if ($booking['status'] === 'pending'): ?>
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Konfirmasi Booking</h5>
+        <form action="/admin/bookings/confirm/<?= $booking['id'] ?>" method="post">
+          <?= csrf_field() ?>
+          <div class="mb-3">
+            <label class="form-label">Assign Teknisi</label>
+            <select name="staff_id" class="form-select">
+              <option value="">-- Pilih Teknisi (opsional) --</option>
+              <?php foreach ($staffs as $s): ?>
+                <option value="<?= $s['id'] ?>"><?= esc($s['name']) ?> — <?= esc($s['specialization'] ?? '') ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-success w-100">
+            <i class="bi bi-check-circle me-1"></i> Konfirmasi Booking
+          </button>
+        </form>
+
+        <hr>
+
+        <a href="/admin/bookings/reject/<?= $booking['id'] ?>"
+           class="btn btn-outline-danger w-100"
+           onclick="return confirm('Yakin tolak booking ini?')">
+          <i class="bi bi-x-circle me-1"></i> Tolak Booking
+        </a>
+      </div>
+    </div>
+  </div>
+  <?php endif; ?>
+</div>
+
+<a href="/admin/bookings" class="btn btn-outline-secondary mt-2">
+  <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
+</a>
+
+<?= $this->endSection() ?>
