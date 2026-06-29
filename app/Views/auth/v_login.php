@@ -79,11 +79,8 @@
               </div>
             </form>
 
-            <div class="mt-3 p-3 bg-light rounded small text-muted">
-              <strong>Akun Demo:</strong><br>
-              Admin: admin@bengkel.com / admin123<br>
-              Staff: staff@bengkel.com / staff123<br>
-              User: pelanggan@gmail.com / user123
+            <div class="mt-3 p-3 bg-light border-start border-4 border-danger rounded small text-muted text-center">
+              Akses sistem informasi manajemen <strong>Bengkel ServisPro</strong>. Silakan masuk menggunakan akun Anda untuk mengelola layanan servis atau melakukan reservasi secara online.
             </div>
 
           </div>

@@ -9,134 +9,118 @@ use App\Models\UserModel;
 class StaffController extends BaseController
 {
     protected $staffModel;
+    protected $userModel;
 
     public function __construct()
     {
         $this->staffModel = new StaffModel();
+        $this->userModel = new UserModel();
     }
 
     public function index()
     {
-        return view('admin/staff/v_index', [
-            'title' => 'Kelola Staff',
+        $data = [
+            'title'  => 'Kelola Staff',
             'staffs' => $this->staffModel->findAll()
-        ]);
+        ];
+        return view('admin/staff/v_index', $data);
     }
 
     public function create()
     {
-        return view('admin/staff/v_create', [
+        $data = [
             'title' => 'Tambah Staff'
-        ]);
+        ];
+        return view('admin/staff/v_create', $data);
     }
 
     public function store()
     {
+        // Validasi input
         $rules = [
-            'name' => 'required',
-            'email' => 'required|valid_email|is_unique[users.email]',
-            'password' => 'required|min_length[6]',
-            'phone' => 'required',
-            'specialization' => 'required'
+            'name'           => 'required|min_length[3]',
+            'email'          => 'required|valid_email|is_unique[users.email]',
+            'phone'          => 'required|min_length[9]',
+            'specialization' => 'required|min_length[3]',
+            'password'       => 'required|min_length[6]',
         ];
-
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $userModel = new UserModel();
+        $db = \Config\Database::connect();
+        $db->transStart();
 
-        // 1. Simpan ke tabel users
-        $userData = [
-            'name' => $this->request->getPost('name'),
-            'email' => $this->request->getPost('email'),
-            'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
-            'phone' => $this->request->getPost('phone'),
-            'role' => 'staff',
+        // 1. Create User for Login
+        $this->userModel->save([
+            'name'      => $this->request->getPost('name'),
+            'email'     => $this->request->getPost('email'),
+            'password'  => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
+            'phone'     => $this->request->getPost('phone'),
+            'role'      => 'staff',
             'is_active' => 1
-        ];
-        
-        $userModel->insert($userData);
-        $userId = $userModel->getInsertID();
+        ]);
 
-        // 2. Simpan ke tabel staff dengan ID yang sama dengan users
-        $staffData = [
-            'id' => $userId,
-            'name' => $this->request->getPost('name'),
-            'phone' => $this->request->getPost('phone'),
+        // 2. Create Staff Data
+        $this->staffModel->save([
+            'name'           => $this->request->getPost('name'),
+            'phone'          => $this->request->getPost('phone'),
             'specialization' => $this->request->getPost('specialization'),
-            'is_active' => 1
-        ];
+            'is_active'      => 1
+        ]);
 
-        $this->staffModel->insert($staffData);
+        $db->transComplete();
 
-        return redirect()->to('admin/staff')->with('success', 'Staff baru berhasil ditambahkan beserta akun loginnya.');
+        if ($db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Gagal menambahkan staff. Periksa kembali data yang diinput.');
+        }
+
+        return redirect()->to('/admin/staff')->with('success', 'Staff berhasil ditambahkan! Akun login sudah siap digunakan.');
     }
 
     public function edit($id)
     {
         $staff = $this->staffModel->find($id);
-        if (!$staff) {
-            return redirect()->to('admin/staff')->with('errors', ['Staff tidak ditemukan']);
-        }
-
-        $userModel = new UserModel();
-        $user = $userModel->find($id);
-
-        return view('admin/staff/v_edit', [
-            'title' => 'Edit Staff',
-            'staff' => $staff,
-            'user' => $user
-        ]);
+        if (!$staff) return redirect()->to('/admin/staff')->with('error', 'Data staff tidak ditemukan.');
+        return view('admin/staff/v_edit', ['title' => 'Edit Staff', 'staff' => $staff]);
     }
 
     public function update($id)
     {
-        $rules = [
-            'name' => 'required',
-            'email' => "required|valid_email|is_unique[users.email,id,{$id}]",
-            'phone' => 'required',
-            'specialization' => 'required'
-        ];
+        $staff = $this->staffModel->find($id);
+        if (!$staff) return redirect()->to('/admin/staff')->with('error', 'Data staff tidak ditemukan.');
 
+        $rules = [
+            'name'           => 'required|min_length[3]',
+            'phone'          => 'required|min_length[9]',
+            'specialization' => 'required|min_length[3]',
+        ];
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $userModel = new UserModel();
-
-        $userData = [
-            'name' => $this->request->getPost('name'),
-            'email' => $this->request->getPost('email'),
-            'phone' => $this->request->getPost('phone'),
-            'is_active' => $this->request->getPost('is_active') ? 1 : 0
-        ];
-
-        if ($this->request->getPost('password')) {
-            $userData['password'] = password_hash($this->request->getPost('password'), PASSWORD_DEFAULT);
-        }
-        
-        $userModel->update($id, $userData);
-
-        $staffData = [
-            'name' => $this->request->getPost('name'),
-            'phone' => $this->request->getPost('phone'),
+        $this->staffModel->update($id, [
+            'name'           => $this->request->getPost('name'),
+            'phone'          => $this->request->getPost('phone'),
             'specialization' => $this->request->getPost('specialization'),
-            'is_active' => $this->request->getPost('is_active') ? 1 : 0
-        ];
+        ]);
 
-        $this->staffModel->update($id, $staffData);
-
-        return redirect()->to('admin/staff')->with('success', 'Data staff berhasil diupdate.');
+        return redirect()->to('/admin/staff')->with('success', 'Data staff berhasil diperbarui.');
     }
 
     public function delete($id)
     {
-        $userModel = new UserModel();
-        
         $this->staffModel->delete($id);
-        $userModel->delete($id);
+        return redirect()->to('/admin/staff')->with('success', 'Staff berhasil dihapus.');
+    }
 
-        return redirect()->to('admin/staff')->with('success', 'Staff berhasil dihapus.');
+    public function toggle($id)
+    {
+        $staff = $this->staffModel->find($id);
+        if ($staff) {
+            $this->staffModel->update($id, ['is_active' => !$staff['is_active']]);
+            return redirect()->to('/admin/staff')->with('success', 'Status staff berhasil diubah.');
+        }
+        return redirect()->to('/admin/staff')->with('error', 'Staff tidak ditemukan.');
     }
 }

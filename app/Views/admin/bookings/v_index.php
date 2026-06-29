@@ -76,6 +76,6 @@
   </tbody>
 </table>
 
-<?= $pager->links() ?>
+<?= $pager ? $pager->links() : '' ?>
 
 <?= $this->endSection() ?>

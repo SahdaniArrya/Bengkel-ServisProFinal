@@ -24,12 +24,16 @@ class BookingModel extends Model
                 services.price,
                 schedules.available_date,
                 schedules.slot_time,
-                staff.name as staff_name
+                staff.name as staff_name,
+                payments.status as payment_status,
+                reviews.id as review_id
             ')
             ->join('users',     'users.id = bookings.user_id')
             ->join('services',  'services.id = bookings.service_id')
             ->join('schedules', 'schedules.id = bookings.schedule_id')
-            ->join('staff',     'staff.id = bookings.staff_id', 'left');
+            ->join('staff',     'staff.id = bookings.staff_id', 'left')
+            ->join('payments',  'payments.booking_id = bookings.id', 'left')
+            ->join('reviews',   'reviews.booking_id = bookings.id', 'left');
 
         if ($id) {
             return $builder->where('bookings.id', $id)->first();

@@ -16,8 +16,9 @@ Universitas Dian Nuswantoro
 
 ## Cara Instalasi
 
-### 1. Clone / ekstrak project ke folder 
+### 1. Clone / ekstrak project ke folder htdocs
 ```bash
+cd htdocs
 # atau langsung copy folder project
 ```
 
@@ -52,7 +53,13 @@ CREATE DATABASE bengkel_servispro CHARACTER SET utf8mb4 COLLATE utf8mb4_general_
 php spark migrate
 php spark db:seed DatabaseSeeder
 ```
-### 6. Jalankan server lokal
+
+### 6. Buat folder upload
+```bash
+mkdir -p public/uploads/services
+```
+
+### 7. Jalankan server lokal
 ```bash
 php spark serve
 ```
@@ -123,9 +130,18 @@ POST /pelanggan/booking/store   → Simpan booking
 GET  /pelanggan/booking/cancel/{id} → Batalkan booking
 GET  /pelanggan/riwayat         → Riwayat booking
 
-
+GET  /api/services              → API: daftar layanan (JSON)
+GET  /api/booking-status/{id}   → API: status booking (JSON)
 ```
 
 ---
 
+## Screenshot
+
+*[Tambahkan screenshot setelah project berjalan]*
+
 ---
+
+## ERD
+
+*[Tersedia di file docs/ERD.png atau lihat migrations untuk struktur tabel]*

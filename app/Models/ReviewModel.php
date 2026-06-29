@@ -11,7 +11,7 @@ class ReviewModel extends Model
     protected $allowedFields = ['user_id', 'service_id', 'booking_id', 'rating', 'comment'];
     protected $useTimestamps = true;
 
-    public function getByBookingId($bookingId)
+    public function getByBooking($bookingId)
     {
         return $this->where('booking_id', $bookingId)->first();
     }

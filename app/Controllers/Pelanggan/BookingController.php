@@ -6,15 +6,19 @@ use App\Controllers\BaseController;
 use App\Models\BookingModel;
 use App\Models\ServiceModel;
 use App\Models\ScheduleModel;
+use App\Models\PaymentModel;
+use App\Models\ReviewModel;
 
 class BookingController extends BaseController
 {
-    protected $bookingModel, $serviceModel, $scheduleModel;
+    protected $bookingModel, $serviceModel, $scheduleModel, $paymentModel, $reviewModel;
     public function __construct()
     {
         $this->bookingModel  = new BookingModel();
         $this->serviceModel  = new ServiceModel();
         $this->scheduleModel = new ScheduleModel();
+        $this->paymentModel  = new PaymentModel();
+        $this->reviewModel   = new ReviewModel();
     }
 
     public function index()
@@ -69,5 +73,116 @@ class BookingController extends BaseController
         $this->bookingModel->update($id, ['status'=>'cancelled']);
         $this->scheduleModel->set('booked_count','booked_count - 1',false)->update($booking['schedule_id']);
         return redirect()->to('/pelanggan/riwayat')->with('success','Booking berhasil dibatalkan.');
+    }
+
+    public function payment($id)
+    {
+        $booking = $this->bookingModel->getWithDetails($id);
+        if (!$booking || $booking['user_id'] != session()->get('user_id')) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Booking tidak ditemukan.');
+        }
+
+        // Cek status booking (hanya boleh jika dikonfirmasi atau sedang dikerjakan)
+        if ($booking['status'] !== 'confirmed' && $booking['status'] !== 'in_progress') {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Pembayaran hanya dapat dilakukan saat booking dikonfirmasi atau dalam proses pengerjaan.');
+        }
+
+        // Cek jika sudah bayar
+        if ($booking['payment_status'] === 'paid') {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Booking ini sudah dibayar.');
+        }
+
+        $data = [
+            'title' => 'Simulasi Pembayaran (UAS)',
+            'booking' => $booking
+        ];
+        return view('pelanggan/v_payment', $data);
+    }
+
+    public function payProcess($id)
+    {
+        $booking = $this->bookingModel->getWithDetails($id);
+        if (!$booking || $booking['user_id'] != session()->get('user_id')) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Booking tidak ditemukan.');
+        }
+
+        // Cek status booking
+        if ($booking['status'] !== 'confirmed' && $booking['status'] !== 'in_progress') {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Pembayaran hanya dapat dilakukan saat booking dikonfirmasi atau dalam proses pengerjaan.');
+        }
+
+        $paymentType = $this->request->getPost('payment_type') ?: 'QRIS';
+
+        // Cari atau buat record payment baru
+        $payment = $this->paymentModel->getByBooking($id);
+        if ($payment) {
+            $this->paymentModel->update($payment['id'], [
+                'status' => 'paid',
+                'payment_type' => $paymentType,
+                'paid_at' => date('Y-m-d H:i:s')
+            ]);
+        } else {
+            $this->paymentModel->insert([
+                'booking_id' => $id,
+                'order_id' => 'BKL-' . time(),
+                'amount' => $booking['price'],
+                'status' => 'paid',
+                'payment_type' => $paymentType,
+                'paid_at' => date('Y-m-d H:i:s')
+            ]);
+        }
+
+        return redirect()->to('/pelanggan/riwayat')->with('success', 'Pembayaran simulasi berhasil dikonfirmasi!');
+    }
+
+    public function review($id)
+    {
+        $booking = $this->bookingModel->getWithDetails($id);
+        if (!$booking || $booking['user_id'] != session()->get('user_id')) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Booking tidak ditemukan.');
+        }
+
+        if ($booking['status'] !== 'done') {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Ulasan hanya dapat diberikan untuk servis yang sudah selesai.');
+        }
+
+        // Cek apakah sudah pernah diulas
+        $existingReview = $this->reviewModel->getByBooking($id);
+        if ($existingReview) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Anda sudah memberikan ulasan untuk booking ini.');
+        }
+
+        $data = [
+            'title' => 'Berikan Ulasan',
+            'booking' => $booking
+        ];
+        return view('pelanggan/v_review', $data);
+    }
+
+    public function reviewStore($id)
+    {
+        $booking = $this->bookingModel->getWithDetails($id);
+        if (!$booking || $booking['user_id'] != session()->get('user_id')) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Booking tidak ditemukan.');
+        }
+
+        // Cek apakah sudah pernah diulas
+        $existingReview = $this->reviewModel->getByBooking($id);
+        if ($existingReview) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Anda sudah memberikan ulasan untuk booking ini.');
+        }
+
+        $rating = $this->request->getPost('rating') ?: 5;
+        $comment = $this->request->getPost('comment') ?: '';
+
+        $this->reviewModel->insert([
+            'user_id' => $booking['user_id'],
+            'service_id' => $booking['service_id'],
+            'booking_id' => $id,
+            'rating' => $rating,
+            'comment' => $comment
+        ]);
+
+        return redirect()->to('/pelanggan/riwayat')->with('success', 'Terima kasih atas ulasan Anda!');
     }
 }

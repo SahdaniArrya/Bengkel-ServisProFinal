@@ -26,13 +26,15 @@ $routes->post('auth/register','AuthController::registerProcess');
 $routes->get('admin/logout',   'AuthController::logout');
 $routes->get('staff/logout',   'AuthController::logout');
 $routes->get('pelanggan/logout',   'AuthController::logout');
-$routes->get('auth/logout',    'AuthController::logout');
 
-// Dashboard & Profile
-$routes->group('', ['filter' => 'auth'], function($routes) {
-    $routes->get('dashboard', 'AuthController::dashboard');
-    $routes->get('profile', 'ProfileController::index');
-    $routes->get('profile/settings', 'ProfileController::settings');
+// Dashboard redirect
+$routes->get('dashboard', 'AuthController::dashboard', ['filter' => 'auth']);
+
+// Profile
+$routes->group('profile', ['filter' => 'auth'], function($routes) {
+    $routes->get('/', 'ProfileController::index');
+    $routes->get('settings', 'ProfileController::settings');
+    $routes->post('update', 'ProfileController::update');
     $routes->get('help', 'ProfileController::help');
 });
 
@@ -49,20 +51,18 @@ $routes->group('admin', ['filter' => 'auth:admin'], function($routes) {
     $routes->get('bookings/(:num)',             'Admin\BookingController::show/$1');
     $routes->post('bookings/confirm/(:num)',    'Admin\BookingController::confirm/$1');
     $routes->get('bookings/reject/(:num)',      'Admin\BookingController::reject/$1');
-    
-    // Staff
     $routes->get('staff',                       'Admin\StaffController::index');
     $routes->get('staff/create',                'Admin\StaffController::create');
     $routes->post('staff/store',                'Admin\StaffController::store');
     $routes->get('staff/edit/(:num)',           'Admin\StaffController::edit/$1');
     $routes->post('staff/update/(:num)',        'Admin\StaffController::update/$1');
     $routes->get('staff/delete/(:num)',         'Admin\StaffController::delete/$1');
+    $routes->get('staff/toggle/(:num)',         'Admin\StaffController::toggle/$1');
     
-    // Users
     $routes->get('users',                       'Admin\UserController::index');
-    $routes->get('users/edit/(:num)',           'Admin\UserController::edit/$1');
-    $routes->post('users/update/(:num)',        'Admin\UserController::update/$1');
+    $routes->get('users/(:num)',                'Admin\UserController::show/$1');
     $routes->get('users/delete/(:num)',         'Admin\UserController::delete/$1');
+    $routes->get('users/toggle/(:num)',         'Admin\UserController::toggle/$1');
 });
 
 // Staff
@@ -80,12 +80,10 @@ $routes->group('pelanggan', ['filter' => 'auth:pelanggan'], function($routes) {
     $routes->post('booking/store',              'Pelanggan\BookingController::store');
     $routes->get('booking/cancel/(:num)',       'Pelanggan\BookingController::cancel/$1');
     $routes->get('riwayat',                     'Pelanggan\BookingController::riwayat');
-
-    // Pembayaran
-    $routes->get('payment/pay/(:num)',          'Pelanggan\PaymentController::pay/$1');
-    $routes->get('payment/finish',              'Pelanggan\PaymentController::finish');
-
-    // Ulasan
-    $routes->get('review/(:num)',               'Pelanggan\ReviewController::index/$1');
-    $routes->post('review/store/(:num)',        'Pelanggan\ReviewController::store/$1');
+    
+    // Pembayaran & Ulasan (UAS)
+    $routes->get('booking/payment/(:num)',      'Pelanggan\BookingController::payment/$1');
+    $routes->post('booking/pay-process/(:num)', 'Pelanggan\BookingController::payProcess/$1');
+    $routes->get('booking/review/(:num)',       'Pelanggan\BookingController::review/$1');
+    $routes->post('booking/review-store/(:num)','Pelanggan\BookingController::reviewStore/$1');
 });

@@ -8,6 +8,6 @@ class StaffModel extends Model
 {
     protected $table         = 'staff';
     protected $primaryKey    = 'id';
-    protected $allowedFields = ['id', 'name', 'phone', 'specialization', 'is_active'];
+    protected $allowedFields = ['name', 'phone', 'specialization', 'is_active'];
     protected $useTimestamps = true;
 }

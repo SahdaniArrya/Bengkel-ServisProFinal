@@ -16,59 +16,40 @@ class UserController extends BaseController
 
     public function index()
     {
-        return view('admin/users/v_index', [
-            'title' => 'Kelola Pengguna',
+        $data = [
+            'title' => 'Pengguna',
             'users' => $this->userModel->findAll()
-        ]);
+        ];
+        return view('admin/users/v_index', $data);
     }
 
-    public function edit($id)
+    public function show($id)
     {
         $user = $this->userModel->find($id);
         if (!$user) {
-            return redirect()->to('admin/users')->with('errors', ['Pengguna tidak ditemukan']);
+            return redirect()->to('/admin/users')->with('error', 'Pengguna tidak ditemukan.');
         }
 
-        return view('admin/users/v_edit', [
-            'title' => 'Edit Pengguna',
+        $data = [
+            'title' => 'Detail Pengguna',
             'user' => $user
-        ]);
-    }
-
-    public function update($id)
-    {
-        $rules = [
-            'name' => 'required',
-            'email' => "required|valid_email|is_unique[users.email,id,{$id}]",
-            'phone' => 'required',
-            'role' => 'required'
         ];
-
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        $userData = [
-            'name' => $this->request->getPost('name'),
-            'email' => $this->request->getPost('email'),
-            'phone' => $this->request->getPost('phone'),
-            'role' => $this->request->getPost('role'),
-            'is_active' => $this->request->getPost('is_active') ? 1 : 0
-        ];
-
-        if ($this->request->getPost('password')) {
-            $userData['password'] = password_hash($this->request->getPost('password'), PASSWORD_DEFAULT);
-        }
-        
-        $this->userModel->update($id, $userData);
-
-        return redirect()->to('admin/users')->with('success', 'Data pengguna berhasil diupdate.');
+        return view('admin/users/v_show', $data);
     }
 
     public function delete($id)
     {
         $this->userModel->delete($id);
+        return redirect()->to('/admin/users')->with('success', 'Pengguna berhasil dihapus.');
+    }
 
-        return redirect()->to('admin/users')->with('success', 'Pengguna berhasil dihapus.');
+    public function toggle($id)
+    {
+        $user = $this->userModel->find($id);
+        if ($user) {
+            $this->userModel->update($id, ['is_active' => !$user['is_active']]);
+            return redirect()->back()->with('success', 'Status pengguna berhasil diubah.');
+        }
+        return redirect()->to('/admin/users')->with('error', 'Pengguna tidak ditemukan.');
     }
 }

@@ -11,12 +11,7 @@ class PaymentModel extends Model
     protected $allowedFields = ['booking_id', 'snap_token', 'order_id', 'amount', 'status', 'payment_type', 'paid_at'];
     protected $useTimestamps = true;
 
-    public function getByOrderId($orderId)
-    {
-        return $this->where('order_id', $orderId)->first();
-    }
-
-    public function getByBookingId($bookingId)
+    public function getByBooking($bookingId)
     {
         return $this->where('booking_id', $bookingId)->first();
     }

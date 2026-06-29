@@ -168,57 +168,60 @@
 
         <li class="nav-item dropdown pe-3">
 
-          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-            <img src=" <?= base_url()?>NiceAdmin/assetss/img/profile-img.jpg" alt="Profile" class="rounded-circle">
-            <span class="d-none d-md-block dropdown-toggle ps-2"><?= session()->get('username');?>(<?= session()->get('role');?>)</span>
-          </a><!-- End Profile Iamge Icon -->
+          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown" style="color: #5c677d; font-weight: 600;">
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; border: 2px solid #dc3545; background-color: #f8d7da; color: #dc3545; transition: 0.3s;">
+              <i class="bi bi-person-fill" style="font-size: 18px;"></i>
+            </div>
+            <span class="d-none d-md-block dropdown-toggle ps-2" style="color: #5c677d;"><?= session()->get('username');?> (<?= session()->get('role');?>)</span>
+          </a><!-- End Profile Icon -->
 
-          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-            <li class="dropdown-header">
-              <h6>Kevin Anderson</h6>
-              <span>Web Designer</span>
+          <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile shadow" style="border: 0; min-width: 240px; padding: 15px 10px; border-radius: 8px;">
+            <li class="dropdown-header text-center mb-3">
+              <h5 class="text-dark fw-bold mb-1" style="font-size: 18px; font-family: 'Poppins', sans-serif; letter-spacing: 0.5px;"><?= session()->get('username') ?: 'User' ?></h5>
+              <span class="fw-bold" style="color: #dc3545; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;">
+                <?= session()->get('role') ?: 'Guest' ?>
+              </span>
             </li>
             <li>
-              <hr class="dropdown-divider">
+              <hr class="dropdown-divider" style="opacity: 0.08;">
             </li>
 
             <li>
-              <a class="dropdown-item d-flex align-items-center" href="/profile">
-                <i class="bi bi-person"></i>
+              <a class="dropdown-item d-flex align-items-center py-2" href="/profile" style="color: #dc3545; font-weight: 500; font-size: 14px;">
+                <i class="bi bi-person me-3" style="color: #dc3545; font-size: 18px;"></i>
                 <span>My Profile</span>
               </a>
             </li>
             <li>
-              <hr class="dropdown-divider">
+              <hr class="dropdown-divider" style="opacity: 0.08;">
             </li>
 
             <li>
-              <a class="dropdown-item d-flex align-items-center" href="/profile/settings">
-                <i class="bi bi-gear"></i>
+              <a class="dropdown-item d-flex align-items-center py-2" href="/profile/settings" style="color: #dc3545; font-weight: 500; font-size: 14px;">
+                <i class="bi bi-gear me-3" style="color: #dc3545; font-size: 18px;"></i>
                 <span>Account Settings</span>
               </a>
             </li>
             <li>
-              <hr class="dropdown-divider">
+              <hr class="dropdown-divider" style="opacity: 0.08;">
             </li>
 
             <li>
-              <a class="dropdown-item d-flex align-items-center" href="/help">
-                <i class="bi bi-question-circle"></i>
+              <a class="dropdown-item d-flex align-items-center py-2" href="/profile/help" style="color: #dc3545; font-weight: 500; font-size: 14px;">
+                <i class="bi bi-question-circle me-3" style="color: #dc3545; font-size: 18px;"></i>
                 <span>Need Help?</span>
               </a>
             </li>
             <li>
-              <hr class="dropdown-divider">
+              <hr class="dropdown-divider" style="opacity: 0.08;">
             </li>
 
             <li>
-              <a class="dropdown-item d-flex align-items-center" href="/auth/logout">
-                <i class="bi bi-box-arrow-right"></i>
+              <a class="dropdown-item d-flex align-items-center py-2" href="/<?= session()->get('role') ?>/logout" style="color: #dc3545; font-weight: 500; font-size: 14px;">
+                <i class="bi bi-box-arrow-right me-3" style="color: #dc3545; font-size: 18px;"></i>
                 <span>Sign Out</span>
               </a>
             </li>
-
           </ul><!-- End Profile Dropdown Items -->
         </li><!-- End Profile Nav -->
 
