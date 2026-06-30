@@ -79,6 +79,67 @@
   </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- Widget Cuaca BMKG - Milestone 5: Integrasi Webservice Client -->
+<!-- ============================================================ -->
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title d-flex align-items-center gap-2">
+          <i class="bi bi-cloud-sun-fill text-info"></i>
+          Info Cuaca Hari Ini
+          <small class="text-muted fw-normal ms-auto" style="font-size:0.75rem">
+            Sumber: BMKG &nbsp;|&nbsp;
+            <?php if ($weather['success']): ?>
+              <?= $weather['from_cache'] ? '🗄️ Dari cache' : '🌐 Langsung dari API' ?>
+              &nbsp;| Update: <?= $weather['waktu_update'] ?>
+            <?php endif; ?>
+          </small>
+        </h5>
+
+        <?php if ($weather['success']): ?>
+          <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+              <div style="font-size:3.5rem; line-height:1"><?= $weather['cuaca_icon'] ?></div>
+              <span class="badge bg-<?= $weather['cuaca_warna'] ?> mt-2 px-3 py-2">
+                <?= $weather['cuaca_desc'] ?>
+              </span>
+            </div>
+            <div class="col-md-4">
+              <h4 class="mb-0 fw-bold"><?= $weather['suhu'] ?>°C</h4>
+              <small class="text-muted">
+                Min: <?= $weather['suhu_min'] ?>°C &nbsp;|&nbsp; Max: <?= $weather['suhu_max'] ?>°C
+              </small>
+              <div class="mt-2">
+                <span class="me-3"><i class="bi bi-droplet text-info"></i> <?= $weather['kelembaban'] ?>%</span>
+                <span><i class="bi bi-wind text-secondary"></i> <?= $weather['angin_kecepatan'] ?> km/h <?= $weather['angin_arah'] ?></span>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <div class="p-3 rounded" style="background: #f8f9fa; border-left: 4px solid #0d6efd;">
+                <strong class="d-block mb-1">📍 <?= $weather['kota'] ?>, <?= $weather['provinsi'] ?></strong>
+                <small><?= $weather['saran_bengkel'] ?></small>
+              </div>
+            </div>
+          </div>
+        <?php else: ?>
+          <div class="alert alert-warning mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>
+              <strong>Info cuaca tidak tersedia</strong><br>
+              <small><?= $weather['saran_bengkel'] ?></small>
+            </div>
+          </div>
+        <?php endif; ?>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 <!-- Tabel Booking Terbaru -->
 <div class="row">
   <div class="col-12">

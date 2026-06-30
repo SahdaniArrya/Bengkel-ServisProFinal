@@ -87,3 +87,22 @@ $routes->group('pelanggan', ['filter' => 'auth:pelanggan'], function($routes) {
     $routes->get('booking/review/(:num)',       'Pelanggan\BookingController::review/$1');
     $routes->post('booking/review-store/(:num)','Pelanggan\BookingController::reviewStore/$1');
 });
+
+// ===================== ROUTES API - Milestone 6: Webservice Server =====================
+// Semua endpoint dilindungi oleh filter API Key (Header: X-API-KEY)
+$routes->group('api', ['filter' => 'apikey'], function ($routes) {
+    // GET /api/services            - Daftar semua layanan bengkel
+    $routes->get('services',              'Api\\BengkelApiController::services');
+
+    // GET /api/services/{id}       - Detail layanan tertentu
+    $routes->get('services/(:num)',       'Api\\BengkelApiController::serviceDetail/$1');
+
+    // GET /api/bookings/{id}       - Detail booking berdasarkan ID
+    $routes->get('bookings/(:num)',       'Api\\BengkelApiController::bookingDetail/$1');
+
+    // POST /api/bookings           - Buat booking baru via API
+    $routes->post('bookings',            'Api\\BengkelApiController::createBooking');
+});
+
+// Halaman dokumentasi API (tidak butuh auth, untuk demo)
+$routes->get('api-docs', 'Api\\BengkelApiController::docs');
