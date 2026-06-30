@@ -8,7 +8,11 @@
   </div>
 <?php endif; ?>
 
+<!-- Widget Cuaca BMKG (Milestone 5) -->
+<?= $this->include('components/weather_widget') ?>
+
 <h6 class="text-muted mb-3">Jadwal Hari Ini — <?= date('l, d M Y') ?></h6>
+
 
 <?php if (empty($bookings)): ?>
   <div class="text-center text-muted py-5">

@@ -12,8 +12,9 @@ namespace App\Libraries;
  */
 class WeatherService
 {
-    // Kode wilayah BMKG untuk kota (default: Bandung - cocok untuk bengkel)
+    // Kode wilayah BMKG untuk kota (default: Semarang)
     // Daftar kode: https://ibnux.github.io/BMKG-importer/
+    protected string $kotaSemarang = '33.74.01.1001'; // Semarang Tengah, Semarang
     protected string $kotaBandung  = '32.73.06.1006'; // Lengkong, Bandung
     protected string $kotaJakarta  = '31.71.03.1001'; // Senen, Jakarta
     protected string $kotaDefault;
@@ -23,8 +24,8 @@ class WeatherService
 
     public function __construct()
     {
-        // Default ke Bandung, bisa diubah
-        $this->kotaDefault = $this->kotaBandung;
+        // Default ke Semarang (lokasi bengkel)
+        $this->kotaDefault = $this->kotaSemarang;
     }
 
     /**

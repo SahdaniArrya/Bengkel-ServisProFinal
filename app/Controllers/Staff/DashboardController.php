@@ -4,13 +4,15 @@ namespace App\Controllers\Staff;
 
 use App\Controllers\BaseController;
 use App\Models\BookingModel;
+use App\Libraries\WeatherService;
 
 class DashboardController extends BaseController
 {
     public function index()
     {
-        $bookingModel = new BookingModel();
-        $staffId = session()->get('user_id');
+        $bookingModel   = new BookingModel();
+        $weatherService = new WeatherService();
+        $staffId        = session()->get('user_id');
 
         $bookings = $bookingModel->select('bookings.*,users.name as user_name,users.phone as user_phone,services.name as service_name,schedules.available_date,schedules.slot_time')
             ->join('users','users.id = bookings.user_id')
@@ -21,7 +23,11 @@ class DashboardController extends BaseController
             ->orderBy('schedules.slot_time','ASC')
             ->findAll();
 
-        return view('staff/v_dashboard', ['title' => 'Dashboard Staff', 'bookings' => $bookings]);
+        return view('staff/v_dashboard', [
+            'title'    => 'Dashboard Staff',
+            'bookings' => $bookings,
+            'weather'  => $weatherService->getWeather(), // Data cuaca BMKG (Milestone 5)
+        ]);
     }
 
     public function jadwal()

@@ -11,6 +11,11 @@
   <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
 <?php endif; ?>
 
+<!-- Widget Cuaca BMKG (Milestone 5) - hanya tampil jika data tersedia -->
+<?php if (isset($weather)): ?>
+  <?= $this->include('components/weather_widget') ?>
+<?php endif; ?>
+
 <div class="card" style="border-top: 3px solid #dc3545;">
   <div class="card-body pt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">

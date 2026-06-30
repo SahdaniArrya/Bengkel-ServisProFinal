@@ -8,6 +8,7 @@ use App\Models\ServiceModel;
 use App\Models\ScheduleModel;
 use App\Models\PaymentModel;
 use App\Models\ReviewModel;
+use App\Libraries\WeatherService;
 
 class BookingController extends BaseController
 {
@@ -62,8 +63,14 @@ class BookingController extends BaseController
 
     public function riwayat()
     {
-        return view('pelanggan/v_riwayat', ['title'=>'Riwayat Booking','bookings'=>$this->bookingModel->getByUser(session()->get('user_id'))]);
+        $weatherService = new WeatherService();
+        return view('pelanggan/v_riwayat', [
+            'title'    => 'Riwayat Booking',
+            'bookings' => $this->bookingModel->getByUser(session()->get('user_id')),
+            'weather'  => $weatherService->getWeather(), // Data cuaca BMKG (Milestone 5)
+        ]);
     }
+
 
     public function cancel($id)
     {
