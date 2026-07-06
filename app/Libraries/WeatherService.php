@@ -14,7 +14,7 @@ class WeatherService
 {
     // Kode wilayah BMKG untuk kota (default: Semarang)
     // Daftar kode: https://ibnux.github.io/BMKG-importer/
-    protected string $kotaSemarang = '33.74.01.1001'; // Semarang Tengah, Semarang
+    protected string $kotasemarang= '33.74.01.1001'; // Semarang Tengah, Semarang
     protected string $kotaBandung  = '32.73.06.1006'; // Lengkong, Bandung
     protected string $kotaJakarta  = '31.71.03.1001'; // Senen, Jakarta
     protected string $kotaDefault;
@@ -25,7 +25,7 @@ class WeatherService
     public function __construct()
     {
         // Default ke Semarang (lokasi bengkel)
-        $this->kotaDefault = $this->kotaSemarang;
+        $this->kotaDefault = $this->kotasemarang;
     }
 
     /**
@@ -40,7 +40,7 @@ class WeatherService
         $cacheKey = $this->cacheKey . '_' . str_replace('.', '_', $kode);
 
         // Cek cache terlebih dahulu
-        $cache   = \Config\Services::cache();
+        $cache   = \Config\Services::cache(); //cache 1 jam 
         $cached  = $cache->get($cacheKey);
 
         if ($cached !== null) {
@@ -70,7 +70,7 @@ class WeatherService
                 'connect_timeout' => 5,
             ]);
 
-            $url      = 'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=' . $kode;
+            $url      = 'https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=' . $kode; //tembak
             $response = $client->get($url, [
                 'headers' => [
                     'Accept' => 'application/json',

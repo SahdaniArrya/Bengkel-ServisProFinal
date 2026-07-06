@@ -9,6 +9,7 @@ use App\Models\ScheduleModel;
 use App\Models\PaymentModel;
 use App\Models\ReviewModel;
 use App\Libraries\WeatherService;
+use App\Libraries\NotificationService;
 
 class BookingController extends BaseController
 {
@@ -56,8 +57,25 @@ class BookingController extends BaseController
         }
         $existing = $this->bookingModel->where('user_id',$userId)->where('schedule_id',$scheduleId)->where('status !=','cancelled')->first();
         if ($existing) return redirect()->back()->with('error','Anda sudah memiliki booking di slot ini.');
-        $this->bookingModel->insert(['user_id'=>$userId,'service_id'=>$serviceId,'schedule_id'=>$scheduleId,'notes'=>$this->request->getPost('notes'),'status'=>'pending']);
+        
+        $this->bookingModel->insert([
+            'user_id' => $userId,
+            'service_id' => $serviceId,
+            'schedule_id' => $scheduleId,
+            'notes' => $this->request->getPost('notes'),
+            'status' => 'pending'
+        ]);
+        
         $this->scheduleModel->set('booked_count','booked_count + 1',false)->update($scheduleId);
+        
+        // Send email notification
+        $userName = session()->get('user_name') ?? 'Pelanggan';
+        $userEmail = session()->get('user_email'); // assuming this is set, if not we could fetch from UserModel
+        if ($userEmail) {
+            $notif = new NotificationService();
+            $notif->sendBookingConfirmation($userEmail, $userName, $service['name'], $schedule['available_date'], $schedule['slot_time']);
+        }
+
         return redirect()->to('/pelanggan/riwayat')->with('success','Booking berhasil! Menunggu konfirmasi bengkel.');
     }
 
@@ -99,11 +117,88 @@ class BookingController extends BaseController
             return redirect()->to('/pelanggan/riwayat')->with('error', 'Booking ini sudah dibayar.');
         }
 
+        // Cari atau buat Order ID untuk pembayaran ini
+        $payment = $this->paymentModel->getByBooking($id);
+        $orderId = '';
+        if ($payment) {
+            $orderId = $payment['order_id'];
+            $snapToken = $payment['snap_token'];
+        } else {
+            $orderId = 'BKL-' . time() . '-' . $id;
+            // Generate snap token via Midtrans API
+            $snapToken = $this->_getSnapToken($orderId, $booking['price'], $booking);
+            
+            if ($snapToken) {
+                // Simpan ke database
+                $this->paymentModel->insert([
+                    'booking_id' => $id,
+                    'order_id'   => $orderId,
+                    'amount'     => $booking['price'],
+                    'status'     => 'pending',
+                    'snap_token' => $snapToken
+                ]);
+            }
+        }
+
         $data = [
-            'title' => 'Simulasi Pembayaran (UAS)',
-            'booking' => $booking
+            'title'     => 'Pembayaran Booking',
+            'booking'   => $booking,
+            'snapToken' => $snapToken ?? '',
+            'clientKey' => env('MIDTRANS_CLIENT_KEY', '')
         ];
         return view('pelanggan/v_payment', $data);
+    }
+
+    /**
+     * Helper to get Snap Token using native CI4 CURLRequest
+     */
+    private function _getSnapToken($orderId, $amount, $bookingData)
+    {
+        $serverKey = env('MIDTRANS_SERVER_KEY', '');
+        $isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+        $url = $isProduction ? 'https://app.midtrans.com/snap/v1/transactions' : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
+
+        $client = \Config\Services::curlrequest([
+            'baseURI' => $url,
+            'timeout' => 10,
+            'http_errors' => false
+        ]);
+
+        $payload = [
+            'transaction_details' => [
+                'order_id'     => $orderId,
+                'gross_amount' => (int) $amount,
+            ],
+            'customer_details' => [
+                'first_name' => $bookingData['user_name'],
+                'email'      => $bookingData['user_email'] ?? 'pelanggan@example.com',
+                'phone'      => $bookingData['user_phone']
+            ],
+            'item_details' => [
+                [
+                    'id'       => 'SRV-' . $bookingData['service_id'],
+                    'price'    => (int) $amount,
+                    'quantity' => 1,
+                    'name'     => substr($bookingData['service_name'], 0, 50)
+                ]
+            ]
+        ];
+
+        $response = $client->post('', [
+            'headers' => [
+                'Accept'        => 'application/json',
+                'Content-Type'  => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($serverKey . ':')
+            ],
+            'json' => $payload
+        ]);
+
+        if ($response->getStatusCode() === 201) {
+            $body = json_decode($response->getBody(), true);
+            return $body['token'] ?? null;
+        }
+
+        return null;
     }
 
     public function payProcess($id)

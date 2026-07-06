@@ -106,3 +106,6 @@ $routes->group('api', ['filter' => 'apikey'], function ($routes) {
 
 // Halaman dokumentasi API (tidak butuh auth, untuk demo)
 $routes->get('api-docs', 'Api\\BengkelApiController::docs');
+
+// Webhook Midtrans (Milestone 7)
+$routes->post('api/payment/callback', 'Api\\WebhookController::midtransCallback');

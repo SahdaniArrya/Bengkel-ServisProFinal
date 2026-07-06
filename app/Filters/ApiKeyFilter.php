@@ -20,7 +20,6 @@ class ApiKeyFilter implements FilterInterface
         // Daftar API Key yang valid (bisa dipindah ke .env atau database)
         $validKeys = [
             'BENGKEL-SECRET-KEY-2024',
-            'MOBILE-APP-KEY-BENGKEL',
         ];
 
         if (empty($apiKey) || !in_array($apiKey, $validKeys)) {

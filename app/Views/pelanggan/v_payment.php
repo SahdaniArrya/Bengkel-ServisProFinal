@@ -41,45 +41,60 @@
           <div class="col-6 text-end"><h4 class="fw-bold text-danger mb-0">Rp <?= number_format($booking['price'], 0, ',', '.') ?></h4></div>
         </div>
 
-        <form action="/pelanggan/booking/pay-process/<?= $booking['id'] ?>" method="post">
-          <?= csrf_field() ?>
-          
-          <div class="mb-4">
-            <label class="form-label fw-bold text-dark mb-3"><i class="bi bi-wallet2 me-1"></i> Pilih Metode Pembayaran (Simulasi)</label>
-            
-            <div class="row g-2">
-              <div class="col-6">
-                <input type="radio" class="btn-check" name="payment_type" id="qris" value="QRIS" checked autocomplete="off">
-                <label class="btn btn-outline-danger w-100 py-3 text-center" for="qris">
-                  <i class="bi bi-qr-code-scan fs-3 d-block mb-1"></i>
-                  QRIS (Gopay/OVO/Dana)
-                </label>
-              </div>
-              <div class="col-6">
-                <input type="radio" class="btn-check" name="payment_type" id="bank" value="Bank Transfer" autocomplete="off">
-                <label class="btn btn-outline-danger w-100 py-3 text-center" for="bank">
-                  <i class="bi bi-bank fs-3 d-block mb-1"></i>
-                  Transfer Bank (Virtual Account)
-                </label>
-              </div>
+        <?php if (!empty($snapToken)): ?>
+            <div class="alert alert-info border-0 small">
+              <i class="bi bi-info-circle me-1"></i> Klik tombol di bawah ini untuk memilih metode pembayaran melalui Midtrans yang aman.
             </div>
-          </div>
 
-          <div class="alert alert-warning border-0 small text-muted">
-            <i class="bi bi-info-circle me-1"></i> Ini adalah halaman simulasi untuk keperluan demo project UAS. Menekan tombol di bawah akan langsung menandai transaksi ini sebagai <strong>LUNAS</strong>.
-          </div>
-
-          <div class="d-grid mt-4">
-            <button type="submit" class="btn btn-danger py-3 fw-bold" style="font-size: 16px;">
-              <i class="bi bi-shield-check me-2"></i> Konfirmasi Pembayaran
-            </button>
-            <a href="/pelanggan/riwayat" class="btn btn-link text-muted mt-2 text-center small">Kembali</a>
-          </div>
-        </form>
+            <div class="d-grid mt-4">
+              <button id="pay-button" class="btn btn-danger py-3 fw-bold" style="font-size: 16px;">
+                <i class="bi bi-credit-card me-2"></i> Bayar Sekarang
+              </button>
+              <a href="/pelanggan/riwayat" class="btn btn-link text-muted mt-2 text-center small">Kembali</a>
+            </div>
+            
+            <!-- Tambahkan form tersembunyi untuk redirect jika sukses -->
+            <form id="payment-success-form" action="/pelanggan/riwayat" method="get" class="d-none">
+                <!-- Kita redirect ke riwayat saja dan set session success -->
+            </form>
+        <?php else: ?>
+            <div class="alert alert-danger border-0 small">
+              <i class="bi bi-exclamation-triangle me-1"></i> Gagal menghubungkan ke server pembayaran. Pastikan API Key diatur dengan benar di server.
+            </div>
+            <div class="d-grid mt-4">
+              <a href="/pelanggan/riwayat" class="btn btn-outline-secondary py-3 fw-bold">Kembali ke Riwayat</a>
+            </div>
+        <?php endif; ?>
 
       </div>
     </div>
   </div>
 </div>
+
+<?php if (!empty($snapToken)): ?>
+<!-- Menggunakan script Snap.js dari Sandbox Midtrans -->
+<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="<?= esc($clientKey) ?>"></script>
+<script type="text/javascript">
+  document.getElementById('pay-button').onclick = function(){
+    // SnapToken diambil dari Controller
+    snap.pay('<?= $snapToken ?>', {
+      onSuccess: function(result){
+        // Menampilkan pesan sukses dan redirect ke riwayat
+        alert("Pembayaran Berhasil! Notifikasi sedang diproses oleh sistem.");
+        window.location.href = "/pelanggan/riwayat";
+      },
+      onPending: function(result){
+        alert("Menunggu pembayaran Anda!");
+      },
+      onError: function(result){
+        alert("Pembayaran Gagal!");
+      },
+      onClose: function(){
+        // alert('Anda menutup popup sebelum menyelesaikan pembayaran');
+      }
+    });
+  };
+</script>
+<?php endif; ?>
 
 <?= $this->endSection() ?>

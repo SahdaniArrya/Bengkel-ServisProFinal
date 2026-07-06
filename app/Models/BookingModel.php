@@ -19,6 +19,7 @@ class BookingModel extends Model
         $builder = $this->select('
                 bookings.*,
                 users.name as user_name,
+                users.email as user_email,
                 users.phone as user_phone,
                 services.name as service_name,
                 services.price,

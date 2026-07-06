@@ -34,7 +34,8 @@ if (isset($weather['cuaca_kode'])) {
 <!-- ============================================================ -->
 <div class="row mb-4">
   <div class="col-12">
-    <div class="weather-widget rounded-4 overflow-hidden position-relative"
+    //weather_widget
+    <div class="weather-widget rounded-4 overflow-hidden position-relative" 
          style="background: <?= $bgGradient ?>; color: <?= $textColor ?>; min-height: 130px;">
 
       <!-- Decorative circles background -->
