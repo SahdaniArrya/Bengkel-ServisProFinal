@@ -149,7 +149,7 @@
         reverseButtons: true
       }).then((result) => {
         if (!result.isConfirmed) {
-          window.location.href = '/pelanggan/dashboard';
+          window.location.href = '/pelanggan/booking';
         }
         // If confirmed, do nothing because we are already on the riwayat page
       });
