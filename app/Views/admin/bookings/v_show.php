@@ -77,6 +77,45 @@
   <?php endif; ?>
 </div>
 
+<!-- Kartu Status Pembayaran -->
+<div class="row mt-3">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-credit-card me-1"></i> Status Pembayaran</h5>
+        <?php if (!empty($payment)): ?>
+          <table class="table table-borderless mb-0">
+            <tr><th style="width:160px">Order ID</th><td><code><?= esc($payment['order_id']) ?></code></td></tr>
+            <tr>
+              <th>Status</th>
+              <td>
+                <?php
+                if ($payment['status'] === 'paid') {
+                  echo '<span class="badge bg-success fs-6"><i class="bi bi-check-circle me-1"></i>LUNAS</span>';
+                } elseif ($payment['status'] === 'pending') {
+                  echo '<span class="badge bg-warning text-dark fs-6"><i class="bi bi-clock me-1"></i>Menunggu Pembayaran</span>';
+                } elseif ($payment['status'] === 'failed') {
+                  echo '<span class="badge bg-danger fs-6"><i class="bi bi-x-circle me-1"></i>Gagal / Kadaluwarsa</span>';
+                }
+                ?>
+              </td>
+            </tr>
+            <tr><th>Metode Bayar</th><td><?= esc($payment['payment_type'] ?? '-') ?></td></tr>
+            <tr><th>Jumlah</th><td><strong>Rp <?= number_format($payment['amount'], 0, ',', '.') ?></strong></td></tr>
+            <?php if (!empty($payment['paid_at'])): ?>
+            <tr><th>Dibayar Pada</th><td><?= date('d M Y, H:i', strtotime($payment['paid_at'])) ?> WIB</td></tr>
+            <?php endif; ?>
+          </table>
+        <?php else: ?>
+          <div class="text-muted py-2">
+            <i class="bi bi-info-circle me-1"></i> Pelanggan belum melakukan pembayaran.
+          </div>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+</div>
+
 <a href="/admin/bookings" class="btn btn-outline-secondary mt-2">
   <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
 </a>

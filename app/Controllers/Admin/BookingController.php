@@ -5,22 +5,29 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\BookingModel;
 use App\Models\StaffModel;
+use App\Models\PaymentModel;
 
 class BookingController extends BaseController
 {
     protected $bookingModel;
     protected $staffModel;
-    public function __construct() { $this->bookingModel = new BookingModel(); $this->staffModel = new StaffModel(); }
+    protected $paymentModel;
+    public function __construct() { 
+        $this->bookingModel = new BookingModel(); 
+        $this->staffModel = new StaffModel(); 
+        $this->paymentModel = new PaymentModel();
+    }
 
     public function index()
     {
         $status = $this->request->getGet('status');
         $date   = $this->request->getGet('date');
-        $builder = $this->bookingModel->select('bookings.*,users.name as user_name,users.phone as user_phone,services.name as service_name,services.price,schedules.available_date,schedules.slot_time,staff.name as staff_name')
+        $builder = $this->bookingModel->select('bookings.*,users.name as user_name,users.phone as user_phone,services.name as service_name,services.price,schedules.available_date,schedules.slot_time,staff.name as staff_name,payments.status as payment_status,payments.amount as payment_amount')
             ->join('users','users.id = bookings.user_id')
             ->join('services','services.id = bookings.service_id')
             ->join('schedules','schedules.id = bookings.schedule_id')
             ->join('staff','staff.id = bookings.staff_id','left')
+            ->join('payments','payments.booking_id = bookings.id','left')
             ->orderBy('bookings.created_at','DESC');
         if ($status) $builder->where('bookings.status', $status);
         if ($date)   $builder->where('schedules.available_date', $date);
@@ -31,7 +38,8 @@ class BookingController extends BaseController
     {
         $booking = $this->bookingModel->getWithDetails($id);
         if (!$booking) return redirect()->to('/admin/bookings')->with('error', 'Booking tidak ditemukan.');
-        return view('admin/bookings/v_show', ['title'=>'Detail Booking','booking'=>$booking,'staffs'=>$this->staffModel->where('is_active',1)->findAll()]);
+        $payment = $this->paymentModel->getByBooking($id);
+        return view('admin/bookings/v_show', ['title'=>'Detail Booking','booking'=>$booking,'staffs'=>$this->staffModel->where('is_active',1)->findAll(),'payment'=>$payment]);
     }
 
     public function confirm($id)

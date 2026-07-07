@@ -34,7 +34,8 @@
       <th>Pelanggan</th>
       <th>Layanan</th>
       <th>Tanggal & Slot</th>
-      <th>Status</th>
+      <th>Status Booking</th>
+      <th>Pembayaran</th>
       <th>Aksi</th>
     </tr>
   </thead>
@@ -64,6 +65,20 @@
         </span>
       </td>
       <td>
+        <?php
+        $ps = $b['payment_status'] ?? null;
+        if ($ps === 'paid') {
+          echo '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Lunas</span>';
+        } elseif ($ps === 'pending') {
+          echo '<span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Menunggu</span>';
+        } elseif ($ps === 'failed') {
+          echo '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Gagal</span>';
+        } else {
+          echo '<span class="badge bg-secondary"><i class="bi bi-dash me-1"></i>Belum Bayar</span>';
+        }
+        ?>
+      </td>
+      <td>
         <a href="/admin/bookings/<?= $b['id'] ?>" class="btn btn-sm btn-outline-primary">
           <i class="bi bi-eye"></i> Detail
         </a>
@@ -71,7 +86,7 @@
     </tr>
     <?php endforeach; ?>
     <?php if (empty($bookings)): ?>
-      <tr><td colspan="6" class="text-center text-muted py-3">Tidak ada booking.</td></tr>
+      <tr><td colspan="7" class="text-center text-muted py-3">Tidak ada booking.</td></tr>
     <?php endif; ?>
   </tbody>
 </table>

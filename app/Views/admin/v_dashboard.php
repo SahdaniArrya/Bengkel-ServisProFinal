@@ -102,7 +102,8 @@
               <th>Layanan</th>
               <th>Tanggal</th>
               <th>Slot</th>
-              <th>Status</th>
+              <th>Status Booking</th>
+              <th>Pembayaran</th>
               <th>Aksi</th>
             </tr>
           </thead>
@@ -135,6 +136,20 @@
                 <span class="badge bg-<?= $badge ?>">
                   <?= $labels[$b['status']] ?? $b['status'] ?>
                 </span>
+              </td>
+              <td>
+                <?php
+                $ps = $b['payment_status'] ?? null;
+                if ($ps === 'paid') {
+                  echo '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Lunas</span>';
+                } elseif ($ps === 'pending') {
+                  echo '<span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Menunggu</span>';
+                } elseif ($ps === 'failed') {
+                  echo '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Gagal</span>';
+                } else {
+                  echo '<span class="badge bg-secondary"><i class="bi bi-dash me-1"></i>Belum Bayar</span>';
+                }
+                ?>
               </td>
               <td>
                 <a href="/admin/bookings/<?= $b['id'] ?>" class="btn btn-sm btn-outline-secondary">
