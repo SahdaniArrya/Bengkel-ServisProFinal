@@ -58,12 +58,22 @@ class BookingController extends BaseController
         $existing = $this->bookingModel->where('user_id',$userId)->where('schedule_id',$scheduleId)->where('status !=','cancelled')->first();
         if ($existing) return redirect()->back()->with('error','Anda sudah memiliki booking di slot ini.');
         
+        $plat      = $this->request->getPost('plat');
+        $kendaraan = $this->request->getPost('kendaraan');
+        $keluhan   = $this->request->getPost('keluhan');
+        $catatan   = $this->request->getPost('notes');
+        
+        $fullNotes = "Plat: {$plat}\nKendaraan: {$kendaraan}\nKeluhan: {$keluhan}";
+        if (!empty($catatan)) {
+            $fullNotes .= "\nCatatan: {$catatan}";
+        }
+
         $this->bookingModel->insert([
-            'user_id' => $userId,
-            'service_id' => $serviceId,
+            'user_id'     => $userId,
+            'service_id'  => $serviceId,
             'schedule_id' => $scheduleId,
-            'notes' => $this->request->getPost('notes'),
-            'status' => 'pending'
+            'notes'       => $fullNotes,
+            'status'      => 'pending'
         ]);
         
         $this->scheduleModel->set('booked_count','booked_count + 1',false)->update($scheduleId);
@@ -76,7 +86,7 @@ class BookingController extends BaseController
             $notif->sendBookingConfirmation($userEmail, $userName, $service['name'], $schedule['available_date'], $schedule['slot_time']);
         }
 
-        return redirect()->to('/pelanggan/riwayat')->with('success','Booking berhasil! Menunggu konfirmasi bengkel.');
+        return redirect()->to('/pelanggan/riwayat')->with('success_booking', true);
     }
 
     public function riwayat()

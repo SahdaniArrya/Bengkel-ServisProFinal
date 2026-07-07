@@ -133,4 +133,28 @@
   </div>
 </div>
 
+<?php if (session()->getFlashdata('success_booking')): ?>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      Swal.fire({
+        title: 'Booking Berhasil!',
+        text: 'Terima kasih, pesanan Anda sedang dibuat dan menunggu konfirmasi dari pihak bengkel.',
+        icon: 'success',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-card-list"></i> Lihat Detail Pesanan',
+        cancelButtonText: '<i class="bi bi-house"></i> Kembali ke Beranda',
+        reverseButtons: true
+      }).then((result) => {
+        if (!result.isConfirmed) {
+          window.location.href = '/pelanggan/dashboard';
+        }
+        // If confirmed, do nothing because we are already on the riwayat page
+      });
+    });
+  </script>
+<?php endif; ?>
+
 <?= $this->endSection() ?>

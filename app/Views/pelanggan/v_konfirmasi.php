@@ -36,14 +36,45 @@
           <input type="hidden" name="service_id" value="<?= $service['id'] ?>">
           <input type="hidden" name="schedule_id" value="<?= $schedule['id'] ?>">
 
-          <div class="mb-4">
-            <label class="form-label">Catatan Tambahan <span class="text-muted small">(opsional)</span></label>
-            <textarea name="notes" class="form-control" rows="3"
-                      placeholder="cth: Honda Beat 2020, plat H 1234 AB, keluhan motor..."></textarea>
+          <div class="row mb-3">
+            <div class="col-md-6 mb-3 mb-md-0">
+              <label class="form-label">Plat Nomor <span class="text-danger">*</span></label>
+              <input type="text" name="plat" class="form-control" placeholder="cth: H 1234 AB" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Jenis/Merek Kendaraan <span class="text-danger">*</span></label>
+              <input type="text" name="kendaraan" class="form-control" placeholder="cth: Honda Vario 150" required>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Keluhan Utama <span class="text-danger">*</span></label>
+            <input type="text" name="keluhan" class="form-control" placeholder="cth: Ganti oli rutin dan rem bunyi" required>
           </div>
 
+          <div class="mb-4">
+            <label class="form-label">Catatan Tambahan <span class="text-muted small">(opsional)</span></label>
+            <textarea name="notes" class="form-control" rows="2"
+                      placeholder="cth: Tolong dicek juga tekanan bannya"></textarea>
+          </div>
+
+          <!-- Tambahkan script SweetAlert2 untuk Notifikasi Popup -->
+          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              const form = document.getElementById('bookingForm');
+              form.addEventListener('submit', function(e) {
+                // Biarkan form tersubmit, tapi tunjukkan popup loading/sukses
+                // Form action akan langsung handle redirect, 
+                // Namun karena user minta popup setelah klik, kita bisa gunakan return false lalu submit via AJAX,
+                // ATAU tangkap session()->getFlashdata('success') di halaman riwayat dan tampilkan popup di sana.
+                // Pendekatan terbaik: ubah form submission jadi normal, lalu di halaman riwayat kita tangkap flashdata untuk menampilkan SweetAlert.
+              });
+            });
+          </script>
+
           <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary" id="btnBuatBooking">
               <i class="bi bi-check-circle me-1"></i> Konfirmasi & Buat Booking
             </button>
             <a href="/pelanggan/booking/jadwal/<?= $service['id'] ?>" class="btn btn-outline-secondary">

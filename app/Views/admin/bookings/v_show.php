@@ -48,21 +48,37 @@
     <div class="card">
       <div class="card-body">
         <h5 class="card-title">Konfirmasi Booking</h5>
-        <form action="/admin/bookings/confirm/<?= $booking['id'] ?>" method="post">
+        <form action="/admin/bookings/confirm/<?= $booking['id'] ?>" method="post" id="confirmForm">
           <?= csrf_field() ?>
           <div class="mb-3">
-            <label class="form-label">Assign Teknisi</label>
-            <select name="staff_id" class="form-select">
-              <option value="">-- Pilih Teknisi (opsional) --</option>
+            <label class="form-label">Assign Teknisi <span class="text-danger">*</span></label>
+            <select name="staff_id" id="staffSelect" class="form-select" required>
+              <option value="">-- Wajib Pilih Teknisi --</option>
               <?php foreach ($staffs as $s): ?>
                 <option value="<?= $s['id'] ?>"><?= esc($s['name']) ?> — <?= esc($s['specialization'] ?? '') ?></option>
               <?php endforeach; ?>
             </select>
+            <div class="invalid-feedback">Silakan pilih teknisi terlebih dahulu.</div>
           </div>
-          <button type="submit" class="btn btn-success w-100">
+          <button type="submit" class="btn btn-success w-100" id="btnConfirm" disabled>
             <i class="bi bi-check-circle me-1"></i> Konfirmasi Booking
           </button>
         </form>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            const staffSelect = document.getElementById('staffSelect');
+            const btnConfirm = document.getElementById('btnConfirm');
+            
+            staffSelect.addEventListener('change', function() {
+              if(this.value !== "") {
+                btnConfirm.disabled = false;
+              } else {
+                btnConfirm.disabled = true;
+              }
+            });
+          });
+        </script>
 
         <hr>
 
