@@ -24,7 +24,7 @@
           <tr><th>Tanggal</th><td><?= date('l, d M Y', strtotime($booking['available_date'])) ?></td></tr>
           <tr><th>Slot Waktu</th><td><?= substr($booking['slot_time'], 0, 5) ?> WIB</td></tr>
           <tr><th>Teknisi</th><td><?= esc($booking['staff_name'] ?? '-') ?></td></tr>
-          <tr><th>Catatan</th><td><?= esc($booking['notes'] ?? '-') ?></td></tr>
+          <tr><th>Catatan</th><td><?= nl2br(esc($booking['notes'] ?? '-')) ?></td></tr>
           <tr>
             <th>Status</th>
             <td>

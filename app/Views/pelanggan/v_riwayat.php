@@ -52,7 +52,7 @@
               <td class="py-3 text-start">
                 <strong class="text-dark"><?= esc($b['service_name']) ?></strong>
                 <?php if ($b['notes']): ?>
-                  <br><small class="text-muted"><?= esc(substr($b['notes'], 0, 40)) ?>...</small>
+                  <br><small class="text-muted"><?= esc(substr(str_replace("\n", ", ", $b['notes']), 0, 60)) ?>...</small>
                 <?php endif; ?>
               </td>
               <td class="py-3">
