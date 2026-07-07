@@ -79,11 +79,17 @@ class BookingController extends BaseController
         $this->scheduleModel->set('booked_count','booked_count + 1',false)->update($scheduleId);
         
         // Send email notification
-        $userName = session()->get('user_name') ?? 'Pelanggan';
-        $userEmail = session()->get('user_email'); // assuming this is set, if not we could fetch from UserModel
+        $userName  = session()->get('name') ?? 'Pelanggan';       // AuthController set key 'name'
+        $userEmail = session()->get('email');                      // AuthController set key 'email'
         if ($userEmail) {
-            $notif = new NotificationService();
-            $notif->sendBookingConfirmation($userEmail, $userName, $service['name'], $schedule['available_date'], $schedule['slot_time']);
+            try {
+                $notif = new NotificationService();
+                $notif->sendBookingConfirmation($userEmail, $userName, $service['name'], $schedule['available_date'], $schedule['slot_time']);
+            } catch (\Throwable $e) {
+                log_message('error', '[NotificationService] Gagal kirim email booking: ' . $e->getMessage());
+            }
+        } else {
+            log_message('warning', '[BookingController] Email pelanggan tidak ada di session, notif booking dilewati.');
         }
 
         return redirect()->to('/pelanggan/riwayat')->with('success_booking', true);

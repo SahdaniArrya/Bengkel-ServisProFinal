@@ -13,17 +13,19 @@ class NotificationService
         $this->email = \Config\Services::email();
         
         // Setup configuration from .env
-        $config['protocol']   = 'smtp';
-        $config['SMTPHost']   = env('SMTP_HOST', 'smtp.gmail.com');
-        $config['SMTPUser']   = env('SMTP_USER', '');
-        $config['SMTPPass']   = env('SMTP_PASS', '');
-        $config['SMTPPort']   = (int) env('SMTP_PORT', 465);
-        $config['SMTPCrypto'] = env('SMTP_CRYPTO', 'ssl');
-        $config['mailType']   = 'html';
-        $config['charset']    = 'utf-8';
-        $config['wordWrap']   = true;
-        $config['CRLF']       = "\r\n";
-        $config['newline']    = "\r\n";
+        $config['protocol']    = 'smtp';
+        $config['SMTPHost']    = env('SMTP_HOST', 'smtp.gmail.com');
+        $config['SMTPUser']    = env('SMTP_USER', '');
+        $config['SMTPPass']    = env('SMTP_PASS', '');
+        $config['SMTPPort']    = (int) env('SMTP_PORT', 465);
+        $config['SMTPCrypto']  = env('SMTP_CRYPTO', 'ssl');
+        $config['SMTPTimeout'] = 30; // naik dari 5 agar tidak timeout di Gmail
+        $config['mailType']    = 'html';
+        $config['charset']     = 'utf-8';
+        $config['wordWrap']    = true;
+        $config['CRLF']        = "\r\n";
+        $config['newline']     = "\r\n";
+        $config['validate']    = false;
 
         $this->email->initialize($config);
     }
@@ -34,7 +36,10 @@ class NotificationService
     public function sendBookingConfirmation($toEmail, $userName, $serviceName, $date, $time)
     {
         // Don't send if SMTP not configured yet
-        if (empty(env('SMTP_PASS'))) return false;
+        if (empty(env('SMTP_PASS'))) {
+            log_message('warning', '[NotificationService] SMTP_PASS kosong, email booking tidak dikirim.');
+            return false;
+        }
 
         $this->email->clear();
         $this->email->setFrom(env('SMTP_USER', 'bengkel@example.com'), 'Bengkel ServisPro');
@@ -50,12 +55,18 @@ class NotificationService
             <li><strong>Tanggal:</strong> {$date}</li>
             <li><strong>Waktu:</strong> {$time} WIB</li>
         </ul>
-        <p>Silakan segera lakukan pembayaran melalui dashboard pelanggan Anda.</p>
+        <p>Kami akan segera memproses booking Anda. Tunggu konfirmasi dari admin bengkel.</p>
         <p>Terima kasih,<br>Tim Bengkel ServisPro</p>";
 
         $this->email->setMessage($message);
 
-        return $this->email->send();
+        $result = $this->email->send(false);
+        if (!$result) {
+            log_message('error', '[NotificationService] Gagal kirim email booking ke ' . $toEmail . '. Debug: ' . $this->email->printDebugger(['headers']));
+        } else {
+            log_message('info', '[NotificationService] Email booking confirmation berhasil dikirim ke ' . $toEmail);
+        }
+        return $result;
     }
 
     /**
@@ -64,7 +75,10 @@ class NotificationService
     public function sendPaymentSuccess($toEmail, $userName, $serviceName, $amount, $orderId)
     {
         // Don't send if SMTP not configured yet
-        if (empty(env('SMTP_PASS'))) return false;
+        if (empty(env('SMTP_PASS'))) {
+            log_message('warning', '[NotificationService] SMTP_PASS kosong, email payment tidak dikirim.');
+            return false;
+        }
 
         $this->email->clear();
         $this->email->setFrom(env('SMTP_USER', 'bengkel@example.com'), 'Bengkel ServisPro');
@@ -85,6 +99,12 @@ class NotificationService
 
         $this->email->setMessage($message);
 
-        return $this->email->send();
+        $result = $this->email->send(false);
+        if (!$result) {
+            log_message('error', '[NotificationService] Gagal kirim email payment ke ' . $toEmail . '. Debug: ' . $this->email->printDebugger(['headers']));
+        } else {
+            log_message('info', '[NotificationService] Email payment success berhasil dikirim ke ' . $toEmail);
+        }
+        return $result;
     }
 }
