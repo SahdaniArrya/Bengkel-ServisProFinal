@@ -17,7 +17,7 @@ class NotificationService
         $config['SMTPHost']   = env('SMTP_HOST', 'smtp.gmail.com');
         $config['SMTPUser']   = env('SMTP_USER', '');
         $config['SMTPPass']   = env('SMTP_PASS', '');
-        $config['SMTPPort']   = env('SMTP_PORT', 465);
+        $config['SMTPPort']   = (int) env('SMTP_PORT', 465);
         $config['SMTPCrypto'] = env('SMTP_CRYPTO', 'ssl');
         $config['mailType']   = 'html';
         $config['charset']    = 'utf-8';

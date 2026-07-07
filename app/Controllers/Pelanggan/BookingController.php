@@ -245,16 +245,20 @@ class BookingController extends BaseController
                 'paid_at'      => date('Y-m-d H:i:s'),
             ]);
 
-            // Kirim email notifikasi sukses
-            $notif = new NotificationService();
-            if (!empty($booking['user_email'])) {
-                $notif->sendPaymentSuccess(
-                    $booking['user_email'],
-                    $booking['user_name'],
-                    $booking['service_name'],
-                    $payment['amount'],
-                    $payment['order_id']
-                );
+            // Kirim email notifikasi sukses (jangan crash app kalau email gagal)
+            try {
+                $notif = new NotificationService();
+                if (!empty($booking['user_email'])) {
+                    $notif->sendPaymentSuccess(
+                        $booking['user_email'],
+                        $booking['user_name'],
+                        $booking['service_name'],
+                        $payment['amount'],
+                        $payment['order_id']
+                    );
+                }
+            } catch (\Throwable $e) {
+                log_message('error', '[NotificationService] Gagal kirim email: ' . $e->getMessage());
             }
 
             return redirect()->to('/pelanggan/riwayat')->with('success', '✅ Pembayaran berhasil! Status booking kamu sudah diperbarui.');
