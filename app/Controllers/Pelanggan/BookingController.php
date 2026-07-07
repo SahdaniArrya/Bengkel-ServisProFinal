@@ -135,25 +135,36 @@ class BookingController extends BaseController
 
         // Cari atau buat Order ID untuk pembayaran ini
         $payment = $this->paymentModel->getByBooking($id);
-        $orderId = '';
+        $orderId   = '';
+        $snapToken = '';
+
         if ($payment) {
-            $orderId = $payment['order_id'];
-            $snapToken = $payment['snap_token'];
+            $orderId   = $payment['order_id'];
+            $snapToken = $payment['snap_token'] ?? '';
         } else {
-            $orderId = 'BKL-' . time() . '-' . $id;
-            // Generate snap token via Midtrans API
-            $snapToken = $this->_getSnapToken($orderId, $booking['price'], $booking);
-            
-            if ($snapToken) {
-                // Simpan ke database
-                $this->paymentModel->insert([
-                    'booking_id' => $id,
-                    'order_id'   => $orderId,
-                    'amount'     => $booking['price'],
-                    'status'     => 'pending',
-                    'snap_token' => $snapToken
-                ]);
+            $orderId   = 'BKL-' . time() . '-' . $id;
+            // Generate snap token via Midtrans API (dibungkus try-catch agar tidak crash saat timeout)
+            try {
+                $snapToken = $this->_getSnapToken($orderId, $booking['price'], $booking);
+            } catch (\Throwable $e) {
+                log_message('error', '[payment] Gagal get snap token: ' . $e->getMessage());
+                return redirect()->to('/pelanggan/riwayat')
+                    ->with('error', '⚠️ Tidak dapat terhubung ke server pembayaran Midtrans. Pastikan internet aktif dan coba lagi.');
             }
+
+            if (!$snapToken) {
+                return redirect()->to('/pelanggan/riwayat')
+                    ->with('error', '⚠️ Gagal mendapatkan token pembayaran dari Midtrans. Coba lagi beberapa saat.');
+            }
+
+            // Simpan ke database
+            $this->paymentModel->insert([
+                'booking_id' => $id,
+                'order_id'   => $orderId,
+                'amount'     => $booking['price'],
+                'status'     => 'pending',
+                'snap_token' => $snapToken
+            ]);
         }
 
         $data = [
@@ -167,16 +178,20 @@ class BookingController extends BaseController
 
     /**
      * Helper to get Snap Token using native CI4 CURLRequest
+     * @throws \Throwable jika koneksi ke Midtrans timeout/gagal
      */
     private function _getSnapToken($orderId, $amount, $bookingData)
     {
-        $serverKey = env('MIDTRANS_SERVER_KEY', '');
+        $serverKey    = env('MIDTRANS_SERVER_KEY', '');
         $isProduction = env('MIDTRANS_IS_PRODUCTION', false);
-        $url = $isProduction ? 'https://app.midtrans.com/snap/v1/transactions' : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
+        $url = $isProduction
+            ? 'https://app.midtrans.com/snap/v1/transactions'
+            : 'https://app.sandbox.midtrans.com/snap/v1/transactions';
 
+        // Membuat CURL request — biarkan exception naik ke caller jika timeout
         $client = \Config\Services::curlrequest([
-            'baseURI' => $url,
-            'timeout' => 10,
+            'baseURI'     => $url,
+            'timeout'     => 15,
             'http_errors' => false
         ]);
 
