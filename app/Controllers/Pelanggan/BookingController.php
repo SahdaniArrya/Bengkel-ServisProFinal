@@ -214,6 +214,59 @@ class BookingController extends BaseController
     }
 
     /**
+     * Simpan pembayaran berdasarkan data yang dikirim dari client (Snap.js onSuccess)
+     * Tidak perlu CURL ke Midtrans, langsung update DB dari data yang dikirim browser.
+     */
+    public function simpanPembayaran($bookingId)
+    {
+        $booking = $this->bookingModel->getWithDetails($bookingId);
+        if (!$booking || $booking['user_id'] != session()->get('user_id')) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Booking tidak ditemukan.');
+        }
+
+        $payment = $this->paymentModel->getByBooking($bookingId);
+        if (!$payment) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Data pembayaran tidak ditemukan.');
+        }
+
+        // Sudah bayar sebelumnya?
+        if ($payment['status'] === 'paid') {
+            return redirect()->to('/pelanggan/riwayat')->with('success', '✅ Pembayaran sudah tercatat sebelumnya!');
+        }
+
+        $transactionStatus = $this->request->getPost('transaction_status') ?? '';
+        $paymentType       = $this->request->getPost('payment_type') ?? 'online';
+
+        if (in_array($transactionStatus, ['capture', 'settlement'])) {
+            $this->paymentModel->update($payment['id'], [
+                'status'       => 'paid',
+                'payment_type' => $paymentType,
+                'paid_at'      => date('Y-m-d H:i:s'),
+            ]);
+
+            // Kirim email notifikasi sukses
+            try {
+                $notif = new NotificationService();
+                if (!empty($booking['user_email'])) {
+                    $notif->sendPaymentSuccess(
+                        $booking['user_email'],
+                        $booking['user_name'],
+                        $booking['service_name'],
+                        $payment['amount'],
+                        $payment['order_id']
+                    );
+                }
+            } catch (\Throwable $e) {
+                log_message('error', '[NotificationService] Gagal kirim email: ' . $e->getMessage());
+            }
+
+            return redirect()->to('/pelanggan/riwayat')->with('success', '✅ Pembayaran berhasil! Status booking kamu sudah diperbarui.');
+        }
+
+        return redirect()->to('/pelanggan/riwayat')->with('error', '❌ Pembayaran tidak berhasil dikonfirmasi (status: ' . $transactionStatus . '). Silakan coba lagi.');
+    }
+
+    /**
      * Cek status pembayaran langsung ke Midtrans (Alternatif 1 - Tanpa Ngrok)
      * Dipanggil setelah popup Midtrans sukses di sisi client.
      */
@@ -229,23 +282,34 @@ class BookingController extends BaseController
             return redirect()->to('/pelanggan/riwayat')->with('error', 'Data pembayaran tidak ditemukan.');
         }
 
-        // Query status ke Midtrans
+        // Jika sudah tercatat paid di database kita sendiri, langsung sukses
+        if ($payment['status'] === 'paid') {
+            return redirect()->to('/pelanggan/riwayat')->with('success', '✅ Pembayaran sudah berhasil dikonfirmasi sebelumnya!');
+        }
+
+        // Query status ke Midtrans - dibungkus try-catch agar timeout tidak crash
         $serverKey    = env('MIDTRANS_SERVER_KEY', '');
         $isProduction = env('MIDTRANS_IS_PRODUCTION', false);
         $baseUrl      = $isProduction ? 'https://api.midtrans.com' : 'https://api.sandbox.midtrans.com';
 
-        $client = \Config\Services::curlrequest(['http_errors' => false, 'timeout' => 10]);
+        try {
+            $client = \Config\Services::curlrequest(['http_errors' => false, 'timeout' => 8]);
 
-        $response = $client->get($baseUrl . '/v2/' . $payment['order_id'] . '/status', [
-            'headers' => [
-                'Accept'        => 'application/json',
-                'Authorization' => 'Basic ' . base64_encode($serverKey . ':'),
-            ]
-        ]);
+            $response = $client->get($baseUrl . '/v2/' . $payment['order_id'] . '/status', [
+                'headers' => [
+                    'Accept'        => 'application/json',
+                    'Authorization' => 'Basic ' . base64_encode($serverKey . ':'),
+                ]
+            ]);
 
-        $body = json_decode($response->getBody(), true);
+            $body = json_decode($response->getBody(), true);
+            $transactionStatus = $body['transaction_status'] ?? 'unknown';
 
-        $transactionStatus = $body['transaction_status'] ?? 'unknown';
+        } catch (\Throwable $e) {
+            // Koneksi ke Midtrans timeout/gagal — cek lokal saja
+            log_message('error', '[Midtrans] Timeout cek status: ' . $e->getMessage());
+            return redirect()->to('/pelanggan/riwayat')->with('error', '⚠️ Tidak dapat terhubung ke server Midtrans. Jika pembayaran sudah berhasil di aplikasi Midtrans, mohon tunggu beberapa menit dan refresh halaman riwayat.');
+        }
 
         if (in_array($transactionStatus, ['capture', 'settlement'])) {
             // SUKSES - update database

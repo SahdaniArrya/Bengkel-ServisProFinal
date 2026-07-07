@@ -76,20 +76,42 @@
 <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="<?= esc($clientKey) ?>"></script>
 <script type="text/javascript">
   document.getElementById('pay-button').onclick = function(){
-    // SnapToken diambil dari Controller
     snap.pay('<?= $snapToken ?>', {
       onSuccess: function(result){
-        // Redirect ke server kita untuk cek & update status pembayaran ke DB
-        window.location.href = "/pelanggan/booking/cek-pembayaran/<?= $booking['id'] ?>";
+        // Kirim data hasil pembayaran langsung ke server via POST form
+        // Ini menghindari CURL timeout karena kita tidak perlu query ulang ke Midtrans
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/pelanggan/booking/simpan-pembayaran/<?= $booking['id'] ?>';
+
+        // CSRF Token
+        var csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '<?= csrf_token() ?>';
+        csrf.value = '<?= csrf_hash() ?>';
+        form.appendChild(csrf);
+
+        // Data dari Midtrans
+        var fields = ['order_id','transaction_status','payment_type','transaction_id'];
+        fields.forEach(function(key) {
+          var input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = key;
+          input.value = result[key] ?? '';
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
       },
       onPending: function(result){
-        alert("Menunggu pembayaran Anda!");
+        alert("Menunggu pembayaran Anda! Selesaikan di aplikasi/bank Anda.");
       },
       onError: function(result){
-        alert("Pembayaran Gagal!");
+        alert("Pembayaran Gagal! Silakan coba lagi.");
       },
       onClose: function(){
-        // alert('Anda menutup popup sebelum menyelesaikan pembayaran');
+        // User menutup popup
       }
     });
   };

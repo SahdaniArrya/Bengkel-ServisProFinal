@@ -89,6 +89,9 @@ $routes->group('pelanggan', ['filter' => 'auth:pelanggan'], function($routes) {
     
     // Cek status pembayaran ke Midtrans (Alternatif 1 - Tanpa Ngrok)
     $routes->get('booking/cek-pembayaran/(:num)', 'Pelanggan\BookingController::checkPayment/$1');
+    
+    // Simpan hasil pembayaran dari Snap.js onSuccess (tanpa CURL ke Midtrans)
+    $routes->post('booking/simpan-pembayaran/(:num)', 'Pelanggan\BookingController::simpanPembayaran/$1');
 });
 
 // ===================== ROUTES API - Milestone 6: Webservice Server =====================
