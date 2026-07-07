@@ -104,21 +104,21 @@
                      onclick="return confirm('Batalkan booking ini?')">
                     <i class="bi bi-x-circle"></i> Batal
                   </a>
-                <?php elseif ($b['status'] === 'confirmed' || $b['status'] === 'in_progress'): ?>
+                <?php elseif (in_array($b['status'], ['confirmed', 'in_progress', 'done'])): ?>
                   <?php if ($b['payment_status'] !== 'paid'): ?>
                     <a href="/pelanggan/booking/payment/<?= $b['id'] ?>" class="btn btn-sm btn-success w-100 py-2 shadow-sm text-white" style="font-weight: 700; font-size: 12px; border-radius: 6px; background-color: #198754 !important;">
                       <i class="bi bi-wallet2"></i> Bayar
                     </a>
+                  <?php elseif ($b['status'] === 'done'): ?>
+                    <?php if (!$b['review_id']): ?>
+                      <a href="/pelanggan/booking/review/<?= $b['id'] ?>" class="btn btn-sm btn-warning w-100 py-2 shadow-sm text-white" style="font-weight: 700; font-size: 12px; border-radius: 6px; background-color: #ffc107 !important;">
+                        <i class="bi bi-star"></i> Ulas
+                      </a>
+                    <?php else: ?>
+                      <span class="text-success fw-bold small"><i class="bi bi-check-all"></i> Selesai</span>
+                    <?php endif; ?>
                   <?php else: ?>
                     <span class="text-muted small">—</span>
-                  <?php endif; ?>
-                <?php elseif ($b['status'] === 'done'): ?>
-                  <?php if (!$b['review_id']): ?>
-                    <a href="/pelanggan/booking/review/<?= $b['id'] ?>" class="btn btn-sm btn-warning w-100 py-2 shadow-sm text-white" style="font-weight: 700; font-size: 12px; border-radius: 6px; background-color: #ffc107 !important;">
-                      <i class="bi bi-star"></i> Ulas
-                    </a>
-                  <?php else: ?>
-                    <span class="text-success fw-bold small"><i class="bi bi-check-all"></i> Selesai</span>
                   <?php endif; ?>
                 <?php else: ?>
                   <span class="text-muted small">—</span>

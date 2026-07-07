@@ -117,9 +117,9 @@ class BookingController extends BaseController
             return redirect()->to('/pelanggan/riwayat')->with('error', 'Booking tidak ditemukan.');
         }
 
-        // Cek status booking (hanya boleh jika dikonfirmasi atau sedang dikerjakan)
-        if ($booking['status'] !== 'confirmed' && $booking['status'] !== 'in_progress') {
-            return redirect()->to('/pelanggan/riwayat')->with('error', 'Pembayaran hanya dapat dilakukan saat booking dikonfirmasi atau dalam proses pengerjaan.');
+        // Cek status booking (boleh bayar jika dikonfirmasi, sedang dikerjakan, atau selesai)
+        if (!in_array($booking['status'], ['confirmed', 'in_progress', 'done'])) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Pembayaran tidak dapat dilakukan pada status ini.');
         }
 
         // Cek jika sudah bayar
@@ -288,8 +288,8 @@ class BookingController extends BaseController
         }
 
         // Cek status booking
-        if ($booking['status'] !== 'confirmed' && $booking['status'] !== 'in_progress') {
-            return redirect()->to('/pelanggan/riwayat')->with('error', 'Pembayaran hanya dapat dilakukan saat booking dikonfirmasi atau dalam proses pengerjaan.');
+        if (!in_array($booking['status'], ['confirmed', 'in_progress', 'done'])) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Pembayaran tidak dapat dilakukan pada status ini.');
         }
 
         $paymentType = $this->request->getPost('payment_type') ?: 'QRIS';
@@ -325,6 +325,10 @@ class BookingController extends BaseController
 
         if ($booking['status'] !== 'done') {
             return redirect()->to('/pelanggan/riwayat')->with('error', 'Ulasan hanya dapat diberikan untuk servis yang sudah selesai.');
+        }
+
+        if (($booking['payment_status'] ?? '') !== 'paid') {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Ulasan hanya dapat diberikan setelah tagihan dilunasi.');
         }
 
         // Cek apakah sudah pernah diulas
