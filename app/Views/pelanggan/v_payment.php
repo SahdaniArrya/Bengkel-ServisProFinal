@@ -79,9 +79,8 @@
     // SnapToken diambil dari Controller
     snap.pay('<?= $snapToken ?>', {
       onSuccess: function(result){
-        // Menampilkan pesan sukses dan redirect ke riwayat
-        alert("Pembayaran Berhasil! Notifikasi sedang diproses oleh sistem.");
-        window.location.href = "/pelanggan/riwayat";
+        // Redirect ke server kita untuk cek & update status pembayaran ke DB
+        window.location.href = "/pelanggan/booking/cek-pembayaran/<?= $booking['id'] ?>";
       },
       onPending: function(result){
         alert("Menunggu pembayaran Anda!");

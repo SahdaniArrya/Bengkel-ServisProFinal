@@ -86,6 +86,9 @@ $routes->group('pelanggan', ['filter' => 'auth:pelanggan'], function($routes) {
     $routes->post('booking/pay-process/(:num)', 'Pelanggan\BookingController::payProcess/$1');
     $routes->get('booking/review/(:num)',       'Pelanggan\BookingController::review/$1');
     $routes->post('booking/review-store/(:num)','Pelanggan\BookingController::reviewStore/$1');
+    
+    // Cek status pembayaran ke Midtrans (Alternatif 1 - Tanpa Ngrok)
+    $routes->get('booking/cek-pembayaran/(:num)', 'Pelanggan\BookingController::checkPayment/$1');
 });
 
 // ===================== ROUTES API - Milestone 6: Webservice Server =====================

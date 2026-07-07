@@ -198,7 +198,72 @@ class BookingController extends BaseController
             return $body['token'] ?? null;
         }
 
+        // Debug: log error response
+        log_message('error', '[Midtrans] Gagal get snap token. Status: ' . $response->getStatusCode() . ' Body: ' . $response->getBody());
         return null;
+    }
+
+    /**
+     * Cek status pembayaran langsung ke Midtrans (Alternatif 1 - Tanpa Ngrok)
+     * Dipanggil setelah popup Midtrans sukses di sisi client.
+     */
+    public function checkPayment($bookingId)
+    {
+        $booking = $this->bookingModel->getWithDetails($bookingId);
+        if (!$booking || $booking['user_id'] != session()->get('user_id')) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Booking tidak ditemukan.');
+        }
+
+        $payment = $this->paymentModel->getByBooking($bookingId);
+        if (!$payment) {
+            return redirect()->to('/pelanggan/riwayat')->with('error', 'Data pembayaran tidak ditemukan.');
+        }
+
+        // Query status ke Midtrans
+        $serverKey    = env('MIDTRANS_SERVER_KEY', '');
+        $isProduction = env('MIDTRANS_IS_PRODUCTION', false);
+        $baseUrl      = $isProduction ? 'https://api.midtrans.com' : 'https://api.sandbox.midtrans.com';
+
+        $client = \Config\Services::curlrequest(['http_errors' => false, 'timeout' => 10]);
+
+        $response = $client->get($baseUrl . '/v2/' . $payment['order_id'] . '/status', [
+            'headers' => [
+                'Accept'        => 'application/json',
+                'Authorization' => 'Basic ' . base64_encode($serverKey . ':'),
+            ]
+        ]);
+
+        $body = json_decode($response->getBody(), true);
+
+        $transactionStatus = $body['transaction_status'] ?? 'unknown';
+
+        if (in_array($transactionStatus, ['capture', 'settlement'])) {
+            // SUKSES - update database
+            $this->paymentModel->update($payment['id'], [
+                'status'       => 'paid',
+                'payment_type' => $body['payment_type'] ?? 'online',
+                'paid_at'      => date('Y-m-d H:i:s'),
+            ]);
+
+            // Kirim email notifikasi sukses
+            $notif = new NotificationService();
+            if (!empty($booking['user_email'])) {
+                $notif->sendPaymentSuccess(
+                    $booking['user_email'],
+                    $booking['user_name'],
+                    $booking['service_name'],
+                    $payment['amount'],
+                    $payment['order_id']
+                );
+            }
+
+            return redirect()->to('/pelanggan/riwayat')->with('success', '✅ Pembayaran berhasil! Status booking kamu sudah diperbarui.');
+
+        } elseif ($transactionStatus === 'pending') {
+            return redirect()->to('/pelanggan/riwayat')->with('error', '⏳ Pembayaran kamu masih pending. Selesaikan pembayarannya dan coba cek lagi.');
+        } else {
+            return redirect()->to('/pelanggan/riwayat')->with('error', '❌ Pembayaran gagal atau kadaluwarsa (status: ' . $transactionStatus . '). Silakan coba lagi.');
+        }
     }
 
     public function payProcess($id)
