@@ -65,7 +65,7 @@ Akses di: **http://localhost:8080**
 |-----------|--------------------------|-----------|
 | Admin     | admin@bengkel.com        | admin123  |
 | Staff     | staff@bengkel.com        | staff123  |
-| Pelanggan | danyynad684@gmail.com    | user123   |
+| Pelanggan | pelanggan@gmail.com      | user123   |
 
 ---
 
