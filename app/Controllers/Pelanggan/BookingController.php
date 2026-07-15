@@ -192,11 +192,13 @@ class BookingController extends BaseController
         $client = \Config\Services::curlrequest([
             'baseURI'     => $url,
             'timeout'     => 15,
-            'http_errors' => false
+            'http_errors' => false,
+            'verify'      => false // <-- Wajib untuk bypass error SSL di localhost XAMPP
         ]);
 
         $payload = [
-            'transaction_details' => [
+            'transaction_details' => [+
+            
                 'order_id'     => $orderId,
                 'gross_amount' => (int) $amount,
             ],
