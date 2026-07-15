@@ -197,8 +197,7 @@ class BookingController extends BaseController
         ]);
 
         $payload = [
-            'transaction_details' => [+
-            
+            'transaction_details' => [
                 'order_id'     => $orderId,
                 'gross_amount' => (int) $amount,
             ],
