@@ -1,6 +1,6 @@
 # Bengkel ServisPro — Sistem Booking Layanan Motor
 
-Project UTS Pemrograman Web Lanjut — CodeIgniter 4  
+Project Akhir Pemrograman Web Lanjut — CodeIgniter 4  
 Universitas Dian Nuswantoro
 
 ---
@@ -10,7 +10,9 @@ Universitas Dian Nuswantoro
 - **Framework**: CodeIgniter 4
 - **Database**: MySQL
 - **Frontend**: Bootstrap 5 + Bootstrap Icons
-- **Payment**: Midtrans Sandbox (sprint berikutnya)
+- **Payment Gateway**: Midtrans (Native Snap API & Webhook)
+- **Notification**: CI4 Native Email (SMTP)
+- **External API**: BMKG Weather API
 
 ---
 
@@ -18,8 +20,8 @@ Universitas Dian Nuswantoro
 
 ### 1. Clone / ekstrak project ke folder htdocs
 ```bash
-cd htdocs
-# atau langsung copy folder project
+git clone https://github.com/SahdaniArrya/Bengkel-ServisProFinal.git
+cd Bengkel-ServisProFinal
 ```
 
 ### 2. Install dependencies
@@ -29,26 +31,16 @@ composer install
 
 ### 3. Konfigurasi .env
 ```bash
-cp env .env
+cp .env.example .env
 ```
 
-Edit `.env`:
-```
-CI_ENVIRONMENT = development
-
-database.default.hostname = localhost
-database.default.database = bengkel_servispro
-database.default.username = root
-database.default.password = 
-database.default.DBDriver = MySQLi
-```
+Edit file `.env` dan sesuaikan pengaturan database, Midtrans, dan SMTP Email Anda. (Detail konfigurasi ada di komentar file `.env`).
 
 ### 4. Buat database
-```sql
-CREATE DATABASE bengkel_servispro CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-```
+Buat database di MySQL/MariaDB (misal: `bengkel_uts_db`).
 
 ### 5. Jalankan migration & seeder
+Pastikan database sudah terhubung dengan benar di `.env`.
 ```bash
 php spark migrate
 php spark db:seed DatabaseSeeder
@@ -63,7 +55,6 @@ mkdir -p public/uploads/services
 ```bash
 php spark serve
 ```
-
 Akses di: **http://localhost:8080**
 
 ---
@@ -74,74 +65,46 @@ Akses di: **http://localhost:8080**
 |-----------|--------------------------|-----------|
 | Admin     | admin@bengkel.com        | admin123  |
 | Staff     | staff@bengkel.com        | staff123  |
-| Pelanggan | pelanggan@gmail.com      | user123   |
+| Pelanggan | danyynad684@gmail.com    | user123   |
 
 ---
 
-## Fitur yang Sudah Diimplementasi (UTS)
+## Fitur yang Telah Diimplementasi
 
-### Sebelum Batas UTS:
-- [x] ERD database (7 tabel, 3NF, relasi lengkap)
-- [x] Migration semua tabel dengan foreign key
-- [x] Seeder realistis (users, staff, services, schedules, bookings)
-- [x] Autentikasi: login, register, logout
-- [x] Multi-role: admin, staff, pelanggan
-- [x] CI4 Filter: AuthFilter (proteksi route per role), GuestFilter
-- [x] CRUD Layanan (admin) dengan upload foto
-- [x] Kelola Booking (admin): konfirmasi, tolak, filter status
-- [x] Booking alur pelanggan: pilih layanan → pilih slot → konfirmasi → simpan
-- [x] Riwayat & batalkan booking (pelanggan)
-- [x] Dashboard admin dengan statistik
-
-### Sprint Berikutnya:
-- [ ] Integrasi Midtrans Sandbox
-- [ ] Notifikasi email (PHPMailer)
-- [ ] Staff dashboard & update status
-- [ ] API endpoint publik
-- [ ] Review & rating pelanggan
+1. **Perencanaan & Desain Database**: ERD lengkap (3NF), 7 tabel terelasi (users, services, staff, schedules, bookings, payments, reviews).
+2. **Migration & Seeder**: File migration dan seeder realistis untuk semua tabel (dapat di-rollback).
+3. **Autentikasi & Otorisasi**: Login, logout, registrasi dengan proteksi Multi-Role (Admin, Staff, Pelanggan) menggunakan CI4 Filters.
+4. **Fitur CRUD Utama**: Kelola Layanan, Jadwal, Booking (dengan validasi, flash message, dan upload foto).
+5. **Integrasi Webservice Client**: Memanggil API Cuaca BMKG secara real-time.
+6. **Webservice Server (REST API)**: Menyediakan endpoint API dengan autentikasi `X-API-KEY`.
+7. **Payment Gateway**: Integrasi pembayaran Midtrans Sandbox menggunakan native CURL.
+8. **Email Notifikasi**: Notifikasi SMTP otomatis saat booking dibuat dan saat pembayaran sukses/lunas.
+9. **UI/UX**: Desain antarmuka profesional menggunakan Bootstrap 5 yang responsif dan konsisten.
 
 ---
 
-## Struktur Route
+## Dokumentasi API (Webservice Server)
 
-```
-GET  /                          → Halaman publik
-GET  /auth/login                → Login (guest only)
-POST /auth/login                → Proses login
-GET  /auth/register             → Register (guest only)
-POST /auth/register             → Proses register
-GET  /auth/logout               → Logout
+Semua request ke API membutuhkan header:
+`X-API-KEY: BENGKEL-SECRET-KEY-2024`
 
-GET  /admin/dashboard           → Dashboard admin
-GET  /admin/services            → Daftar layanan
-GET  /admin/services/create     → Form tambah layanan
-POST /admin/services/store      → Simpan layanan baru
-GET  /admin/services/edit/{id}  → Form edit layanan
-POST /admin/services/update/{id}→ Update layanan
-GET  /admin/services/delete/{id}→ Hapus layanan
-GET  /admin/bookings            → Daftar booking
-GET  /admin/bookings/{id}       → Detail booking
-POST /admin/bookings/confirm/{id}→ Konfirmasi booking
-
-GET  /pelanggan/booking         → Pilih layanan
-GET  /pelanggan/booking/jadwal/{id} → Pilih jadwal
-GET  /pelanggan/booking/konfirmasi  → Konfirmasi booking
-POST /pelanggan/booking/store   → Simpan booking
-GET  /pelanggan/booking/cancel/{id} → Batalkan booking
-GET  /pelanggan/riwayat         → Riwayat booking
-
-GET  /api/services              → API: daftar layanan (JSON)
-GET  /api/booking-status/{id}   → API: status booking (JSON)
-```
+| Method | Endpoint | Deskripsi | Parameter/Body |
+|--------|----------|-----------|----------------|
+| GET | `/api/services` | Mendapatkan semua layanan aktif | - |
+| GET | `/api/services/{id}` | Detail layanan tertentu | - |
+| GET | `/api/bookings/{id}` | Detail booking tertentu | - |
+| POST | `/api/bookings` | Membuat booking baru | `{"user_id": 1, "service_id": 1, "schedule_id": 1, "notes": ""}` |
+| GET | `/api-docs` | Dokumentasi API lengkap (JSON) | - |
 
 ---
 
-## Screenshot
+## ERD (Entity Relationship Diagram)
 
-*[Tambahkan screenshot setelah project berjalan]*
+ERD lengkap sistem ini dapat dilihat pada file dokumentasi berikut:
+*(Sertakan screenshot ERD Anda di sini)*
 
 ---
 
-## ERD
+## Screenshot Aplikasi
 
-*[Tersedia di file docs/ERD.png atau lihat migrations untuk struktur tabel]*
+*(Sertakan screenshot halaman utama, dashboard admin, dan form booking di sini)*
