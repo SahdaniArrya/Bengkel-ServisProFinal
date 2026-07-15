@@ -84,9 +84,13 @@ class BookingController extends BaseController
         if ($userEmail) {
             try {
                 $notif = new NotificationService();
-                $notif->sendBookingConfirmation($userEmail, $userName, $service['name'], $schedule['available_date'], $schedule['slot_time']);
+                $emailResult = $notif->sendBookingConfirmation($userEmail, $userName, $service['name'], $schedule['available_date'], $schedule['slot_time']);
+                if ($emailResult !== true) {
+                    return redirect()->to('/pelanggan/riwayat')->with('success_booking', true)->with('error', "⚠️ Booking berhasil, TAPI Email gagal dikirim: <br><pre>{$emailResult}</pre>");
+                }
             } catch (\Throwable $e) {
                 log_message('error', '[NotificationService] Gagal kirim email booking: ' . $e->getMessage());
+                return redirect()->to('/pelanggan/riwayat')->with('success_booking', true)->with('error', '⚠️ Booking berhasil, TAPI Email gagal dikirim (Exception): ' . $e->getMessage());
             }
         } else {
             log_message('warning', '[BookingController] Email pelanggan tidak ada di session, notif booking dilewati.');
@@ -270,19 +274,23 @@ class BookingController extends BaseController
             try {
                 $notif = new NotificationService();
                 if (!empty($booking['user_email'])) {
-                    $notif->sendPaymentSuccess(
+                    $emailResult = $notif->sendPaymentSuccess(
                         $booking['user_email'],
                         $booking['user_name'],
                         $booking['service_name'],
                         $payment['amount'],
                         $payment['order_id']
                     );
+                    if ($emailResult !== true) {
+                        return redirect()->to('/pelanggan/riwayat')->with('success', "✅ Pembayaran Midtrans Berhasil! TAPI Email Gagal Dikirim. Buka ini: <br><pre>{$emailResult}</pre>");
+                    }
                 }
             } catch (\Throwable $e) {
                 log_message('error', '[NotificationService] Gagal kirim email: ' . $e->getMessage());
+                return redirect()->to('/pelanggan/riwayat')->with('success', '✅ Pembayaran Berhasil! TAPI ada error sistem saat ngirim email: ' . $e->getMessage());
             }
 
-            return redirect()->to('/pelanggan/riwayat')->with('success', '✅ Pembayaran berhasil! Status booking kamu sudah diperbarui.');
+            return redirect()->to('/pelanggan/riwayat')->with('success', '✅ Pembayaran berhasil! Status booking diperbarui & Email Lunas sudah dikirim.');
         }
 
         return redirect()->to('/pelanggan/riwayat')->with('error', '❌ Pembayaran tidak berhasil dikonfirmasi (status: ' . $transactionStatus . '). Silakan coba lagi.');

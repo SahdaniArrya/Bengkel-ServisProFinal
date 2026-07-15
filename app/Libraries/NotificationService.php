@@ -62,11 +62,13 @@ class NotificationService
 
         $result = $this->email->send(false);
         if (!$result) {
-            log_message('error', '[NotificationService] Gagal kirim email booking ke ' . $toEmail . '. Debug: ' . $this->email->printDebugger(['headers']));
+            $errorMsg = $this->email->printDebugger(['headers']);
+            log_message('error', '[NotificationService] Gagal kirim email booking ke ' . $toEmail . '. Debug: ' . $errorMsg);
+            return $errorMsg;
         } else {
             log_message('info', '[NotificationService] Email booking confirmation berhasil dikirim ke ' . $toEmail);
+            return true;
         }
-        return $result;
     }
 
     /**
@@ -101,10 +103,12 @@ class NotificationService
 
         $result = $this->email->send(false);
         if (!$result) {
-            log_message('error', '[NotificationService] Gagal kirim email payment ke ' . $toEmail . '. Debug: ' . $this->email->printDebugger(['headers']));
+            $errorMsg = $this->email->printDebugger(['headers']);
+            log_message('error', '[NotificationService] Gagal kirim email payment ke ' . $toEmail . '. Debug: ' . $errorMsg);
+            return $errorMsg;
         } else {
             log_message('info', '[NotificationService] Email payment success berhasil dikirim ke ' . $toEmail);
+            return true;
         }
-        return $result;
     }
 }
