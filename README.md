@@ -98,13 +98,19 @@ Semua request ke API membutuhkan header:
 
 ---
 
-## ERD (Entity Relationship Diagram)
-
-ERD lengkap sistem ini dapat dilihat pada file dokumentasi berikut:
-*(Sertakan screenshot ERD Anda di sini)*
-
----
-
 ## Screenshot Aplikasi
 
-*(Sertakan screenshot halaman utama, dashboard admin, dan form booking di sini)*
+### Halaman Login
+![Login](docs/screenshots/Login.png)
+
+### Dashboard Admin
+![Dashboard Admin](docs/screenshots/DashboardAdmin.png)
+
+### Daftar Layanan
+![Daftar Layanan](docs/screenshots/daftarlayanan.png)
+
+### Form Booking
+![Form Booking](docs/screenshots/formbooking.png)
+
+### Payment Midtrans
+![Payment](docs/screenshots/payment.png)
